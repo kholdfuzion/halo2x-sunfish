@@ -21,3 +21,24 @@ E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.GUI\bin\Debu
 E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.GUI\obj\Debug\Sunfish.MetaEditor.MetaGridView.resources
 E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.GUI\bin\Debug\Sunfish.Mode.dll
 E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.GUI\bin\Debug\Sunfish.Mode.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.GUI.exe.config
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\MetaLayouts\fx.xml
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\MetaLayouts\scnr.xml
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.GUI.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.GUI.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.Mode.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\WeifenLuo.WinFormsUI.Docking.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.Mode.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\bin\Debug\Sunfish.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.BitmapTool.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.CreateFileDialog.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.MainForm.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.MetaEditor.MetaGridView.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.MetaTool.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.SolutionExplorer.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.Properties.Resources.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.GUI\obj\Debug\Sunfish.GUI.csproj.GenerateResource.Cache
