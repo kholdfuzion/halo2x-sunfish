@@ -1,0 +1,10 @@
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\bin\Release\WindowsFormsApplication1.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\bin\Release\WindowsFormsApplication1.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\bin\Release\Sunfish.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\bin\Release\Sunfish.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.Properties.Resources.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\Sunfish.Example1.csproj.GenerateResource.Cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.MainForm.resources

@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DAD74384-E2FC-4C30-A3CC-E18553F15A7B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Sunfish</RootNamespace>
+    <AssemblyName>Sunfish</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <StartupObject>
+    </StartupObject>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <TargetCulture>en-CA</TargetCulture>
+    <ProductName>Sunfish</ProductName>
+    <PublisherName>Jackson C. Wiebe</PublisherName>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Buffering.cs" />
+    <Compile Include="Decompiler.cs" />
+    <Compile Include="Developmental\Benchmark.cs" />
+    <Compile Include="Compiler.cs" />
+    <Compile Include="Developmental\FasterDecompiler.cs" />
+    <Compile Include="Project.cs" />
+    <Compile Include="TagStructures\0.TagStructures.cs" />
+    <Compile Include="TagStructures\adlg.cs" />
+    <Compile Include="TagStructures\ant.cs" />
+    <Compile Include="TagStructures\bipd.cs" />
+    <Compile Include="TagStructures\bitm.cs" />
+    <Compile Include="TagStructures\bloc.cs" />
+    <Compile Include="TagStructures\bsdt.cs" />
+    <Compile Include="TagStructures\char.cs" />
+    <Compile Include="TagStructures\clwd.cs" />
+    <Compile Include="TagStructures\coll.cs" />
+    <Compile Include="TagStructures\colo.cs" />
+    <Compile Include="TagStructures\cont.cs" />
+    <Compile Include="TagStructures\crea.cs" />
+    <Compile Include="TagStructures\ctrl.cs" />
+    <Compile Include="TagStructures\deca.cs" />
+    <Compile Include="TagStructures\DECR.cs" />
+    <Compile Include="TagStructures\devi.cs" />
+    <Compile Include="TagStructures\effe.cs" />
+    <Compile Include="TagStructures\egor.cs" />
+    <Compile Include="TagStructures\eqip.cs" />
+    <Compile Include="TagStructures\fog.cs" />
+    <Compile Include="TagStructures\foot.cs" />
+    <Compile Include="TagStructures\fpch.cs" />
+    <Compile Include="TagStructures\fx.cs" />
+    <Compile Include="TagStructures\garb.cs" />
+    <Compile Include="TagStructures\gldf.cs" />
+    <Compile Include="TagStructures\goof.cs" />
+    <Compile Include="TagStructures\hlmt.cs" />
+    <Compile Include="TagStructures\hudg.cs" />
+    <Compile Include="TagStructures\item.cs" />
+    <Compile Include="TagStructures\itmc.cs" />
+    <Compile Include="TagStructures\jmad.cs" />
+    <Compile Include="TagStructures\jpt.cs" />
+    <Compile Include="TagStructures\lens.cs" />
+    <Compile Include="TagStructures\ligh.cs" />
+    <Compile Include="TagStructures\lsnd.cs" />
+    <Compile Include="TagStructures\ltmp.cs" />
+    <Compile Include="TagStructures\mach.cs" />
+    <Compile Include="TagStructures\matg.cs" />
+    <Compile Include="TagStructures\mdlg.cs" />
+    <Compile Include="TagStructures\MGS2.cs" />
+    <Compile Include="TagStructures\mode.cs" />
+    <Compile Include="TagStructures\mulg.cs" />
+    <Compile Include="TagStructures\nhdt.cs" />
+    <Compile Include="TagStructures\obje.cs" />
+    <Compile Include="TagStructures\phmo.cs" />
+    <Compile Include="TagStructures\phys.cs" />
+    <Compile Include="TagStructures\pmov.cs" />
+    <Compile Include="TagStructures\pphy.cs" />
+    <Compile Include="TagStructures\proj.cs" />
+    <Compile Include="TagStructures\prt3.cs" />
+    <Compile Include="TagStructures\PRTM.cs" />
+    <Compile Include="TagStructures\sbsp.cs" />
+    <Compile Include="TagStructures\scen.cs" />
+    <Compile Include="TagStructures\scnr.cs" />
+    <Compile Include="TagStructures\sfx.cs" />
+    <Compile Include="TagStructures\shad.cs" />
+    <Compile Include="TagStructures\sily.cs" />
+    <Compile Include="TagStructures\skin.cs" />
+    <Compile Include="TagStructures\sky.cs" />
+    <Compile Include="TagStructures\sncl.cs" />
+    <Compile Include="TagStructures\snd.cs" />
+    <Compile Include="TagStructures\snde.cs" />
+    <Compile Include="TagStructures\snmx.cs" />
+    <Compile Include="TagStructures\spas.cs" />
+    <Compile Include="TagStructures\spk.cs" />
+    <Compile Include="TagStructures\ssce.cs" />
+    <Compile Include="TagStructures\stem.cs" />
+    <Compile Include="TagStructures\styl.cs" />
+    <Compile Include="TagStructures\tdtl.cs" />
+    <Compile Include="TagStructures\trak.cs" />
+    <Compile Include="TagStructures\udlg.cs" />
+    <Compile Include="TagStructures\ugh.cs" />
+    <Compile Include="TagStructures\unic.cs" />
+    <Compile Include="TagStructures\unit.cs" />
+    <Compile Include="TagStructures\vehc.cs" />
+    <Compile Include="TagStructures\vehi.cs" />
+    <Compile Include="TagStructures\vrtx.cs" />
+    <Compile Include="TagStructures\weap.cs" />
+    <Compile Include="TagStructures\weat.cs" />
+    <Compile Include="TagStructures\wgit.cs" />
+    <Compile Include="TagStructures\wgtz.cs" />
+    <Compile Include="TagStructures\wigl.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tag.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
