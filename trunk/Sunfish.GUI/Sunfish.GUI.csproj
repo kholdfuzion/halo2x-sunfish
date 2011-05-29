@@ -136,10 +136,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Sunfish.MetaEditor\Sunfish.MetaEditor.csproj">
-      <Project>{1CB2E806-ACA4-4D15-83BA-53567229937C}</Project>
-      <Name>Sunfish.MetaEditor</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Sunfish.Model\Sunfish.Mode.csproj">
       <Project>{E314A0A7-C807-45F4-A4FA-B3A3F8108144}</Project>
       <Name>Sunfish.Mode</Name>
