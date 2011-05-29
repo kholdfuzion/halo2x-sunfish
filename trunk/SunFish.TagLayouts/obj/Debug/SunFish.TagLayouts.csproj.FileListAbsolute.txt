@@ -1,0 +1,5 @@
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\SunFish.TagLayouts\obj\Debug\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\SunFish.TagLayouts\bin\Debug\SunFish.TagLayouts.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\SunFish.TagLayouts\bin\Debug\SunFish.TagLayouts.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\SunFish.TagLayouts\obj\Debug\SunFish.TagLayouts.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\SunFish.TagLayouts\obj\Debug\SunFish.TagLayouts.pdb

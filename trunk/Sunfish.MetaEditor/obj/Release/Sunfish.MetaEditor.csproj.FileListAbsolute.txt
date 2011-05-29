@@ -1,0 +1,13 @@
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.Properties.Resources.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.csproj.GenerateResource.Cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.Main.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\MetaLayouts\fx.xml
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\MetaLayouts\scnr.xml
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\Sunfish.MetaEditor.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\Sunfish.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.MetaGridView.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\Sunfish.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\bin\Release\Sunfish.MetaEditor.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.MetaEditor\obj\Release\Sunfish.MetaEditor.dll

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tag>
+  <unused count="16"/>
+  <enum16 name="Map Type">
+    <option name="Campaign"/>
+    <option name="Multiplayer"/>
+    <option name="Mainmenu"/>
+    <option name="Shared"/>
+    <option name="Campaign Shared"/>
+  </enum16>
+  <short name="Local North"/>
+  <unused count="788"/>
+  <tagblock name="Obstacle Placements">
+    <short name="Type"/>
+    <short name="Name"/>
+    <int name="Placement Flags"/>
+    <float name="Position X"/>
+    <float name="Position Y"/>
+    <float name="Position Z"/>
+    <float name="Rotation Yaw"/>
+    <float name="Rotation Pitch"/>
+    <float name="Rotation Roll"/>
+    <float name="Scale"/>
+    <unused count="2"/>
+    <short name="Manual BSP Flags"/>
+    <int name="Unique ID"/>
+    <short name="Origin BSP"/>
+    <short name="Type"/>
+    <short name="Source"/>
+    <short name="BSP Policy"/>
+    <stringid name="Variant Name"/>
+    <short name="Editor Folder"/>
+    <unused count="4"/>
+    <short name="Active Change Colors"/>
+    <byte name="Primary Color R"/>
+    <byte name="Primary Color G"/>
+    <byte name="Primary Color B"/>
+    <byte name="Secondary Color R"/>
+    <byte name="Secondary Color G"/>
+    <byte name="Secondary Color B"/>
+    <byte name="Tertiary Color R"/>
+    <byte name="Tertiary Color G"/>
+    <byte name="Tertiary Color B"/>
+    <byte name="Quaternary Color R"/>
+    <byte name="Quaternary Color G"/>
+    <byte name="Quaternary Color B"/>
+  </tagblock>
+</tag>

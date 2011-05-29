@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tag class="_fx_">
+  <unused count="12"/>
+  <tagblock name="Template Collection">
+    <int name="DSP Effects"/>
+    <tagblock name="Explanation">
+      <byte name="Data"/>
+    </tagblock>
+    <float/>
+  </tagblock>
+  <tagblock name="Template Collection">
+    <tagblock name="Parameters">
+      <int name="Name"/>
+      <int/>
+      <short/>
+      <short/>
+      <short/>
+      <short/>
+      <tagblock name="Default Function">
+        <int/>
+        <float name="Default Scalar Value"/>
+        <float name="Minimum Scalar Value"/>
+        <float name="Maximum Scalar Value"/>
+      </tagblock>
+    </tagblock>
+    <int name="Input Effects Name"/>
+  </tagblock>
+</tag>
