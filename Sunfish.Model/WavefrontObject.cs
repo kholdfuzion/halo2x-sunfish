@@ -278,6 +278,141 @@ namespace Sunfish.Mode
             Lines = new List<Line>(LineCount);
         }
 
+        public WavefrontObject(Stream stream)
+        {
+            //I'm very very sorry :{
+            //For everything that follows...
+
+            StreamReader sr = new StreamReader(stream);
+            string s = sr.ReadToEnd();
+            sr.Close();
+            string[] Lines = s.Split(new string[] { "\r\n", "\n\r", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+            s = "";
+
+            int Material = -1;
+            int Group = -1;
+
+            string Line;
+            string[] components;
+            string t;
+            string last;
+            int Length;
+
+            bool Scan = true;
+
+            for (int Pass = 0; Pass < 2; Pass++)
+            {
+                for (int i = 0; i < Lines.Length; i++)
+                {
+                    Line = Lines[i].Trim();
+                    Length = Line.IndexOf(" ");
+                    if (Length > 0)
+                        Line = Line.Substring(0, Length);
+                    last = s;
+                    switch (Line)
+                    {
+                        case "v":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                VertexCount++;
+                            else
+                            {
+                                float x = float.Parse(components[1]);
+                                float y = float.Parse(components[2]);
+                                float z = float.Parse(components[3]);
+                                Vertices.Add(new Vector3(x, y, z));
+                            }
+                            break;
+                        case "vt":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                TexcoordCount++;
+                            else
+                            {
+                                float u = float.Parse(components[1]);
+                                float v = float.Parse(components[2]);
+                                Texcoords.Add(new Vector2(u, v));
+                            }
+                            break;
+                        case "vn":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                NormalCount++;
+                            else
+                            {
+                                float x = float.Parse(components[1]);
+                                float y = float.Parse(components[2]);
+                                float z = float.Parse(components[3]);
+                                Normals.Add(new Vector3(x, y, z));
+                            }
+                            break;
+                        case "f":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " ", "/" }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                FaceCount++;
+                            else
+                            {
+                                Face temp = new Face(components);
+                                temp.MaterialID = Material;
+                                temp.GroupID = Group;
+                                Faces.Add(temp);
+                            }
+                            break;
+                        //case "l":
+                        //    t = Lines[i].Trim();
+                        //    if (Scan)
+                        //        LineCount++;
+                        //    else
+                        //    {
+                        //        Line temp = new Line(t);
+                        //        Lines.Add(temp);
+                        //    }
+                        //    break;
+                        case "g":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                GroupCount++;
+                            else
+                            {
+                                if (!(components.Length == 1) && !Groups.ContainsKey(components[1]))
+                                {
+                                    Groups.Add(components[1], Groups.Count);
+                                    Group = Groups[components[1]];
+                                }
+                                else if (!(components.Length == 1))
+                                    Group = Groups[components[1]];
+                            }
+                            break;
+                        case "usemtl":
+                            t = Lines[i].Trim();
+                            components = t.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                            if (Scan)
+                                MaterialCount++;
+                            else
+                            {
+                                if (!Materials.ContainsKey(components[1]))
+                                    Materials.Add(components[1], Materials.Count);
+                                Material = Materials[components[1]];
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                if (Scan)
+                {
+                    Initialize();
+                    Scan = false;
+                }
+            }
+        }
+
         public BoundingBox GenerateBoundingBox()
         {
             BoundingBox bounds = new BoundingBox();
