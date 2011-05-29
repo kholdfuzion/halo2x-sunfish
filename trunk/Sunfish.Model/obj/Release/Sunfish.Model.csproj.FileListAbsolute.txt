@@ -1,7 +1,0 @@
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\obj\Release\ResolveAssemblyReference.cache
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\bin\Release\Sunfish.Model.dll
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\bin\Release\Sunfish.Model.pdb
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\bin\Release\Sunfish.dll
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\bin\Release\Sunfish.pdb
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\obj\Release\Sunfish.Model.dll
-E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish\Sunfish.Model\obj\Release\Sunfish.Model.pdb
