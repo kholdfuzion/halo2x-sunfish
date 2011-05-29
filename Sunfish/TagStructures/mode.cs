@@ -104,7 +104,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_4 : TagBlock
 		{
-			public TagBlock0_4() : base(12, 4)
+			public TagBlock0_4() : base("section group", 12, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{
@@ -114,7 +114,7 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(16, 4)
+				public TagBlock1_0() : base("compound node", 16, 4)
 				{
 				}
 			}

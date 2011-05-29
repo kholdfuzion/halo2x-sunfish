@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using Microsoft.DirectX;
-using System.Collections;
-using Microsoft.DirectX.Direct3D;
 using Sunfish.TagStructures;
+using System.Text;
 
 namespace Sunfish.Mode
 {
@@ -87,13 +83,16 @@ namespace Sunfish.Mode
 
     public class Model
     {
+        public const int Size = 132;
+
         public string Name;
-        public BoundingBox[] BoundingBoxes;
-        public Region[] Regions;
-        public Section[] Sections;
-        public Node[] Nodes;
-        public MarkerGroup[] MarkerGroups;
-        public Shader[] Shaders;
+        public BoundingBox[] BoundingBoxes = new BoundingBox[0];
+        public Region[] Regions = new Region[0];
+        public Section[] Sections = new Section[0];
+        public SectionGroup[] SectionGroups = new SectionGroup[0];
+        public Node[] Nodes = new Node[0];
+        public MarkerGroup[] MarkerGroups = new MarkerGroup[0];
+        public Shader[] Shaders = new Shader[0];
 
         public Model(Tag tag)
         {
@@ -152,6 +151,23 @@ namespace Sunfish.Mode
 
             #endregion
 
+            #region Section Groups
+
+            tag.TagStream.Position = 52;
+            Count = br.ReadInt32();
+            if (Count > 0)
+            {
+                int Offset = br.ReadInt32();
+                SectionGroups = new SectionGroup[Count];
+                for (int i = 0; i < Count; i++)
+                {
+                    tag.TagStream.Position = Offset + (i * MarkerGroup.Size);
+                    SectionGroups[i] = new SectionGroup(tag.TagStream);
+                }
+            }
+
+            #endregion
+
             #region Nodes
 
             tag.TagStream.Position = 72;
@@ -167,9 +183,24 @@ namespace Sunfish.Mode
                 }
             }
 
-            #endregion
+            #endregion            
 
-            MarkerGroups = new MarkerGroup[0];
+            #region Marker Groups
+
+            tag.TagStream.Position = 88;
+            Count = br.ReadInt32();
+            if (Count > 0)
+            {
+                int Offset = br.ReadInt32();
+                MarkerGroups = new MarkerGroup[Count];
+                for (int i = 0; i < Count; i++)
+                {
+                    tag.TagStream.Position = Offset + (i * MarkerGroup.Size);
+                    MarkerGroups[i] = new MarkerGroup(tag);
+                }
+            }
+
+            #endregion
 
             #region Shaders
 
@@ -189,11 +220,25 @@ namespace Sunfish.Mode
             #endregion
         }
 
+        public byte[] Serialize(Tag tag)
+        {
+            MemoryStream stream = new MemoryStream(Size);
+            BinaryWriter bw = new BinaryWriter(stream); 
+            if (!tag.StringIdNames.Contains(Name))
+            {
+                tag.StringIdNames.Add(Name);
+            }
+            bw.Write(tag.StringIdNames.IndexOf(Name));
+            return stream.GetBuffer();
+        }
+
         public Tag CreateTag()
         {
             Tag tag = new Tag();
+            tag.Type = "mode";
+            tag.Filename = Tag.Path.Create(Name, tag.Type);
             Sunfish.TagStructures.mode structure = new Sunfish.TagStructures.mode();
-            structure.Data = new byte[structure.Size];
+            structure.Data = this.Serialize(tag);
             foreach (BoundingBox boundingBox in this.BoundingBoxes)
             {
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("bounding box")] as TagBlockArray;
@@ -230,6 +275,22 @@ namespace Sunfish.Mode
                     permArr.SetDataReference(tb.Data);
                     TagBlock permTagBlock = permArr.Default;
                     permTagBlock.Data = resource.Serialize();
+                    permArr.Add(permTagBlock);
+                }
+                arr.Add(tb);
+            }
+            foreach (SectionGroup sectionGroup in this.SectionGroups)
+            {
+                TagBlockArray arr = structure.Values[structure.IndexOfValue("section group")] as TagBlockArray;
+                arr.SetDataReference(structure.Data);
+                TagBlock tb = arr.Default;
+                tb.Data = sectionGroup.Serialize();
+                foreach (CompoundNode compoundNode in sectionGroup.CompoundNodes)
+                {
+                    TagBlockArray permArr = tb.Values[tb.IndexOfValue("compound node")] as TagBlockArray;
+                    permArr.SetDataReference(tb.Data);
+                    TagBlock permTagBlock = permArr.Default;
+                    permTagBlock.Data = compoundNode.Serialize();
                     permArr.Add(permTagBlock);
                 }
                 arr.Add(tb);
@@ -321,7 +382,7 @@ namespace Sunfish.Mode
         public string name;
         short nodemapoffset;
         short nodemapsize;
-        public Permutation[] permutation;
+        public Permutation[] permutation = new Permutation[0];
 
         public Region(Tag tag)
         {
@@ -456,8 +517,8 @@ namespace Sunfish.Mode
             BinaryWriter bw = new BinaryWriter(stream);
             bw.Write((int)MainRawDataType);
             bw.Write((int)SubRawDataType);
-            bw.Write(RawDataOffset); 
             bw.Write(RawDataSize);
+            bw.Write(RawDataOffset);
             bw.Close();
             return stream.GetBuffer();
         }
@@ -466,7 +527,6 @@ namespace Sunfish.Mode
     public class Section
     {
         public const int Size = 92;
-        public Resource[] Resources;
 
         public VertexType VertexType;
 
@@ -481,6 +541,7 @@ namespace Sunfish.Mode
         public int RawSize;
         public const int RawHeaderSize = 112;
         public int RawDataSize;
+        public Resource[] Resources = new Resource[0];
 
         public Section(Tag tag, BoundingBox boundingBox)
         {
@@ -533,6 +594,11 @@ namespace Sunfish.Mode
             bw.Write(RawSize);
             bw.Write(0);
             bw.Write(RawDataSize);
+            if (!tag.TagReferences.Contains(tag.Filename))
+            {
+                tag.TagReferences.Add(tag.Filename);
+            }
+            bw.Write(tag.TagReferences.IndexOf(tag.Filename));
             bw.Close();
             return stream.GetBuffer();
         }
@@ -540,8 +606,15 @@ namespace Sunfish.Mode
 
     public class SectionGroup
     {
-        DetailLevelFlags DetailLevels;
-        CompoundNode[] CompoundNodes;
+        public const int Size = 12;
+        
+        public DetailLevelFlags DetailLevels;
+        public CompoundNode[] CompoundNodes = new CompoundNode[0];
+
+        public SectionGroup()
+        {
+            DetailLevels = DetailLevelFlags.L1 | DetailLevelFlags.L2 | DetailLevelFlags.L3 | DetailLevelFlags.L4 | DetailLevelFlags.L5 | DetailLevelFlags.L6;
+        }
 
         public SectionGroup(Stream stream)
         {
@@ -559,11 +632,20 @@ namespace Sunfish.Mode
                 }
             }
         }
+
+        public byte[] Serialize()
+        {
+            MemoryStream stream = new MemoryStream(Size);
+            BinaryWriter bw = new BinaryWriter(stream);
+            bw.Write((int)DetailLevels);
+            bw.Close();
+            return stream.GetBuffer();
+        }
     }
 
     public class CompoundNode
     {
-        public const uint Size = 16;
+        public const int Size = 16;
 
         sbyte NodeIndex0;
         sbyte NodeIndex1;
@@ -583,6 +665,21 @@ namespace Sunfish.Mode
             NodeWeight0 = br.ReadSingle();
             NodeWeight1 = br.ReadSingle();
             NodeWeight2 = br.ReadSingle();
+        }
+
+        public byte[] Serialize()
+        {
+            MemoryStream stream = new MemoryStream(Size);
+            BinaryWriter bw = new BinaryWriter(stream);
+            bw.Write(NodeIndex0);
+            bw.Write(NodeIndex1);
+            bw.Write(NodeIndex2);
+            bw.Write(NodeIndex3);
+            bw.Write(NodeWeight0);
+            bw.Write(NodeWeight1);
+            bw.Write(NodeWeight2);
+            bw.Close();
+            return stream.GetBuffer();
         }
     }
 
@@ -680,11 +777,12 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            stream.Position = 12;
+            stream.Position = 8;
             if (!tag.TagReferences.Contains(filename))
             {
                 tag.TagReferences.Add(filename);
             }
+            bw.Write(Encoding.UTF8.GetBytes(Tag.Path.GetTagType(filename)), 0, 4);
             TagId = tag.TagReferences.IndexOf(filename);
             bw.Write(TagId);
             bw.Close();
@@ -735,9 +833,9 @@ namespace Sunfish.Mode
 
     public class MarkerGroup
     {
-        const int Size = 12;
+        public const int Size = 12;
         string Name;
-        public Marker[] Markers;
+        public Marker[] Markers = new Marker[0];
 
         public MarkerGroup(Tag tag)
         {
@@ -755,7 +853,6 @@ namespace Sunfish.Mode
                 }
             }
         }
-
 
         public byte[] Serialize(Tag tag)
         {
