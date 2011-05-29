@@ -13,7 +13,20 @@ namespace Sunfish
         /// <summary>
         /// Relative filename of the tag
         /// </summary>
-        public string Filename;
+        public string Filename
+        {
+            get { return filename; }
+            set
+            {
+                    for (int i = 0; i < TagReferences.Count; i++)
+                    {
+                        if (TagReferences[i] == filename)
+                            TagReferences[i] = value;
+                    }
+                filename = value;
+            }
+        }
+        private string filename;
         /// <summary>
         /// FourCC type
         /// </summary>
@@ -33,11 +46,11 @@ namespace Sunfish
         /// <summary>
         /// Array of stringId names
         /// </summary>
-        public List<string> StringIdNames;
+        public List<string> StringIdNames = new List<string>();
         /// <summary>
         /// Array of filenames, which are the tags this tag has references to
         /// </summary>
-        public List<string> TagReferences;
+        public List<string> TagReferences = new List<string>();
 
         public Tag()
         {
@@ -186,6 +199,7 @@ namespace Sunfish
         /// </summary>
         public void Save()
         {
+            if (Filename == null) throw new Exception();
             Save(Filename);
         }
 
@@ -198,7 +212,7 @@ namespace Sunfish
             FileStream File = new FileStream(filename, FileMode.Create);
             BinaryWriter binWriter = new BinaryWriter(File);
             Info header = new Info();
-
+            this.Filename = filename;
             header.type = this.Type;
 
             File.Position = Info.Size;
@@ -248,7 +262,14 @@ namespace Sunfish
                 header.idReferencesCount = TagReferences.Count;
                 for (int i = 0; i < TagReferences.Count; i++)
                 {
-                    binWriter.Write(Encoding.UTF8.GetBytes(TagReferences[i]));
+                    if (TagReferences[i] == "{THIS}")
+                    {
+                        binWriter.Write(Encoding.UTF8.GetBytes(this.Filename));
+                    }
+                    else
+                    {
+                        binWriter.Write(Encoding.UTF8.GetBytes(TagReferences[i]));
+                    }
                     binWriter.Write(byte.MinValue);
                 }
                 File.Position -= 1;
@@ -344,6 +365,11 @@ namespace Sunfish
             public static string GetTagName(string tagpath)
             {
                 return GetPathComponents(tagpath)[0];
+            }
+
+            public static string Create(string filename, string type)
+            {
+                return System.IO.Path.ChangeExtension(filename, type) + Extension;
             }
         }
     }

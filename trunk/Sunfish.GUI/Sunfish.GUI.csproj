@@ -48,7 +48,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.5.0.15095, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Downloads\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+      <HintPath>..\References\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +136,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sunfish.DirectDraw\Sunfish.DirectDraw.csproj">
+      <Project>{F4BD6D98-AD49-46E4-AB40-F39B1578EED5}</Project>
+      <Name>Sunfish.DirectDraw</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Sunfish.Model\Sunfish.Mode.csproj">
       <Project>{E314A0A7-C807-45F4-A4FA-B3A3F8108144}</Project>
       <Name>Sunfish.Mode</Name>

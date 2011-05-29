@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using Sunfish.Mode;
 using System.IO;
+using Sunfish.Canvas;
 
 namespace Sunfish.GUI
 {
@@ -30,6 +31,7 @@ namespace Sunfish.GUI
             //bw.Write(buffer);
             //bw.Close();
             Tag newTag = m.CreateTag();
+            Model m2 = new Model(newTag);
         }
     }
 }

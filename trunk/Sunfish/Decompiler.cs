@@ -221,6 +221,7 @@ namespace Sunfish
                     type = Map.TagIndex.GetCleanType(type).Trim();
                     string tagname = map.Tagnames[idReferences[i] & 0x0000FFFF];
                     memWriter.Write(Encoding.UTF8.GetBytes(Path.ChangeExtension(tagname, type)));
+                    memWriter.Write(Encoding.UTF8.GetBytes(Tag.Path.Extension));
                     memWriter.Write(byte.MinValue);
                 }
                 stream.Position -= 1;
