@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -49,6 +52,10 @@
     <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=2.5.0.15095, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="XNAViewer, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\XNAViewer.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -111,6 +118,9 @@
     <EmbeddedResource Include="MetaTool.resx">
       <DependentUpon>MetaTool.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ModelEditor.resx">
+      <DependentUpon>ModelEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SolutionExplorer.resx">
       <DependentUpon>SolutionExplorer.cs</DependentUpon>
     </EmbeddedResource>
@@ -151,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Drawn_wallpapers_Nuclear_Winter_016548_.jpg" />
+    <None Include="Resources\effects.fx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MetaLayouts\fx.xml">

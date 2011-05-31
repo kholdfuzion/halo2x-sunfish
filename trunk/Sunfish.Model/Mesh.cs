@@ -19,6 +19,16 @@ namespace Sunfish.Mode
         public Vector3[] Normals;
         public Vector3[] Tangents;
         public Vector3[] Bitangents;
+        public Vertex[] Vertexlist
+        {
+            get
+            {
+                Vertex[] vl = new Vertex[Vertices.Length];
+                for (int i = 0; i < vl.Length; i++)
+                    vl[i] = new Vertex(Vertices[i], Microsoft.Xna.Framework.Graphics.Color.Red, Normals[i]);
+                return vl;
+            }
+        }
         byte[] BoneMap;
 
         public Mesh(Stream stream, Resource[] resources, Section section, BoundingBox boundingBox)
@@ -41,7 +51,7 @@ namespace Sunfish.Mode
                         for (int i = 0; i < Groups.Length; i++)
                         {
                             Groups[i] = new Group();
-                            stream.Position = StartOffset + 120 + r.RawDataOffset + 4;
+                            stream.Position = StartOffset + 120 + r.RawDataOffset + (i * 72) + 4;
                             Groups[i].ShaderIndex = br.ReadInt16();
                             Groups[i].IndiceStart = br.ReadInt16();
                             Groups[i].IndiceCount = br.ReadInt16();
@@ -150,40 +160,76 @@ namespace Sunfish.Mode
                                 Tangents = new Vector3[Ints.Length / 3];
                                 Bitangents = new Vector3[Ints.Length / 3];
 
+                                int[] normInts = new int[Ints.Length / 3];
+                                for (int i = 0; i < normInts.Length; i++)
+                                {
+                                    normInts[i] = Ints[i * 3];
+                                }
+
                                 int normalsCount = 0;
                                 int tangentsCount = 0;
                                 int bitangentsCount = 0;
-                                for (int i = 0; i < Ints.Length; i++)
+                                for (int i = 0; i < normInts.Length; i++)
                                 {
-                                    byte xSign = (byte)((Ints[i] >> 10) & 0x1);
-                                    byte ySign = (byte)((Ints[i] >> 21) & 0x1);
-                                    byte zSign = (byte)((Ints[i] >> 31) & 0x1);
-                                    float x = (int)((Ints[i]) & 0x3FF);
-                                    x /= (float)0x3FF;
-                                    float y = (float)((Ints[i] >> 11) & 0x3FF);
-                                    y /= (float)0x3FF;
-                                    float z = (float)((Ints[i] >> 22) & 0x1FF);
-                                    z /= (float)0x1FF;
-                                    z = zSign == 1 ? (z - 1) : z;
-                                    y = ySign == 1 ? (y - 1) : y;
-                                    x = xSign == 1 ? (x - 1) : x;
-
-                                    switch (i % 3)
-                                    {
-                                        case 0:
-                                            Normals[normalsCount] = new Vector3(x, y, z);
-                                            normalsCount++;
-                                            break;
-                                        case 1:
-                                            Tangents[tangentsCount] = new Vector3(x, y, z);
-                                            tangentsCount++;
-                                            break;
-                                        case 2:
-                                            Bitangents[bitangentsCount] = new Vector3(x, y, z);
-                                            bitangentsCount++;
-                                            break;
+                                    int CompressedData = normInts[i];
+                                    int x10 = (CompressedData & 0x000007FF);
+                                    if ((x10 & 0x00000400) == 0x00000400) { 
+                                        x10 = -((~x10) & 0x000007FF);
+                                        if (x10 == 0) x10 = -1;
                                     }
+                                    int y11 = (CompressedData >> 11) & 0x000007FF;
+                                    if ((y11 & 0x00000400) == 0x00000400)
+                                    {
+                                        y11 = -((~y11) & 0x000007FF);
+                                        if (y11 == 0) y11 = -1;
+                                    }
+                                    int z11 = (CompressedData >> 22) & 0x000003FF;
+                                    if ((z11 & 0x00000200) == 0x00000200)
+                                    {
+                                        z11 = -((~z11) & 0x000003FF);
+                                        if (z11 == 0) z11 = -1;
+                                    }
+                                    float x, y, z;
+                                    x = -(x10 / (float)0x000003ff);
+                                    y = -(y11 / (float)0x000003FF);
+                                    z = -(z11 / (float)0x000001FF);
+                                    int o = 0;
+                                    //z /= (float)0x000007FF;
+                                    //byte xSign = (byte)((Ints[i] >> 10) & 0x1);
+                                    //byte ySign = (byte)((Ints[i] >> 21) & 0x1);
+                                    //byte zSign = (byte)((Ints[i] >> 31) & 0x1);
+                                    //float x = (int)((Ints[i]) & 0x3FF);
+                                    //x /= (float)0x3FF;
+                                    //float y = (float)((Ints[i] >> 11) & 0x3FF);
+                                    //y /= (float)0x3FF;
+                                    //float z = (float)((Ints[i] >> 22) & 0x1FF);
+                                    //z /= (float)0x1FF;
+                                    //z = zSign == 1 ? (z - 1) : z;
+                                    //y = ySign == 1 ? (y - 1) : y;
+                                    //x = xSign == 1 ? (x - 1) : x;
+
+                                    Normals[normalsCount] = new Vector3(x, y, z);
+                                    Normals[normalsCount].Multiply(-1.0f);
+                                    Normals[normalsCount].Normalize();
+                                    normalsCount++;
+
+                                    //switch (i % 3)
+                                    //{
+                                    //    case 0:
+                                    //        Normals[normalsCount] = new Vector3(x, y, z);
+                                    //        normalsCount++;
+                                    //        break;
+                                    //    case 1:
+                                    //        Tangents[tangentsCount] = new Vector3(x, y, z);
+                                    //        tangentsCount++;
+                                    //        break;
+                                    //    case 2:
+                                    //        Bitangents[bitangentsCount] = new Vector3(x, y, z);
+                                    //        bitangentsCount++;
+                                    //        break;
+                                    //}
                                 }
+                                //Normals = GenerateNormals(Vertices, Indices);
                                 break;
 
                             #endregion
@@ -206,31 +252,73 @@ namespace Sunfish.Mode
             }
         }
 
-        public byte[] Serialize(Section section, BoundingBox boundingBox)
+        private Vector3[] GenerateNormals(Vector3[] vertices, short[] indices)
+        {
+            //VertexPositionNormalColored[] vertices = new VertexPositionNormalColored[WIDTH * HEIGHT];
+            //vb.GetData(vertices);
+            //int[] indices = new int[(WIDTH - 1) * (HEIGHT - 1) * 6];
+            //ib.GetData(indices);
+
+            Vector3[] normals = new Vector3[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+                normals[i] = new Vector3(0, 0, 0);
+            bool w = false;
+            for (int i = 0; i < indices.Length - 2; i++)
+            {
+                if (indices[i + 1] == indices[i + 2] ||
+                    indices[i + 1] == indices[i] ||
+                    indices[i] == indices[i + 2]) continue;
+                Vector3 firstvec = vertices[indices[i + 1]] - vertices[indices[i]];
+                Vector3 secondvec = vertices[indices[i]] - vertices[indices[i + 2]];
+                Vector3 normal;
+                if (w)
+                    normal = Vector3.Cross(firstvec, secondvec);
+                else
+                    normal = Vector3.Cross(secondvec, firstvec);
+                normal.Normalize();
+                normals[indices[i]] += normal;
+                normals[indices[i + 1]] += normal;
+                normals[indices[i + 2]] += normal;
+                w = !w;
+            }
+
+            for (int i = 0; i < vertices.Length; i++)
+                normals[i].Normalize();
+
+            return normals;
+        }
+
+        public byte[] Serialize(Section section, BoundingBox boundingBox, out Resource[] resources)
         {
             MemoryStream stream = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(stream);
 
+            List<Resource> resourceList = new List<Resource>();
+            
             byte[] fourCC = Encoding.UTF8.GetBytes("crsr");
 
             bw.Write(Encoding.UTF8.GetBytes("hklb"), 0, 4);
             bw.Write(new byte[116]);
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.MeshInformation, ResourceSubType.MeshInformationData, (int)(stream.Position - 120), 72));
             for (int i = 0; i < Groups.Length; i++)
             {
                 Groups[i].Serialize(stream);
             }
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.UnknownStruct8, ResourceSubType.UnknownStruct8, (int)(stream.Position - 120), 8));
             bw.Write(0x00000000); bw.Write((ushort)0xFFFF); bw.Write((short)0x0000);
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.TriangleStrip, ResourceSubType.IndiceStripData, (int)(stream.Position - 120), Indices.Length * 2));
             foreach (short i in Indices)
                 bw.Write(i);
             bw.Write(Padding.GetBytes(stream.Position, 4));
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.Unknown, ResourceSubType.UnknownData, (int)(stream.Position - 120), 96));
             bw.Write((byte)0x02); bw.Write((byte)0x06); bw.Write((byte)0x00); bw.Write((byte)0x00);
             bw.Write(new byte[28]);
             bw.Write((byte)0x19); bw.Write((byte)0x04); bw.Write((byte)0x00); bw.Write((byte)0x00);
@@ -239,6 +327,7 @@ namespace Sunfish.Mode
             bw.Write(new byte[28]);
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.Vertex, ResourceSubType.VertexData, (int)(stream.Position - 120), Vertices.Length * 6));
             foreach (Vector3 v in Vertices)
             {
                 bw.Write((short)((((v.X - boundingBox.X.Min) / (boundingBox.X.Max - boundingBox.X.Min)) * BoundingBox.FullRatio) - BoundingBox.HalfRatio));
@@ -247,6 +336,7 @@ namespace Sunfish.Mode
             }
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.Vertex, ResourceSubType.UVData, (int)(stream.Position - 120), Vertices.Length * 4));
             foreach (Vector2 t in Texcoords)
             {
                 bw.Write((short)((((t.X - boundingBox.U.Min) / (boundingBox.U.Max - boundingBox.U.Min)) * BoundingBox.FullRatio) - BoundingBox.HalfRatio));
@@ -254,6 +344,7 @@ namespace Sunfish.Mode
             }
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.Vertex, ResourceSubType.VectorData, (int)(stream.Position - 120), Normals.Length * 4 * 3));
             for (int i = 0; i < Normals.Length; i++)
             {
                 bw.Write(CompressVector(Normals[i]));
@@ -262,12 +353,14 @@ namespace Sunfish.Mode
             }
 
             bw.Write(fourCC, 0, 4);
+            resourceList.Add(new Resource(ResourceType.BoneMap, ResourceSubType.BoneData, (int)(stream.Position - 120), BoneMap.Length));
             foreach (byte b in BoneMap)
                 bw.Write(b);
             bw.Write(Padding.GetBytes(stream.Position, 4));
 
             bw.Write(Encoding.UTF8.GetBytes("fklb"), 0, 4);
 
+            resources = resourceList.ToArray();
             return stream.ToArray();
         }
 
@@ -610,6 +703,38 @@ namespace Sunfish.Mode
                 return v3Angle;
             }
         }
+    }
+    public struct Vertex
+    {
+        Vector3 Position;
+        Microsoft.Xna.Framework.Graphics.Color Color;
+        Vector3 Normal;
+
+        public Vertex(Vector3 pos, Microsoft.Xna.Framework.Graphics.Color col, Vector3 norm)
+        {
+            Position = pos;
+            Color = col;
+            Normal = norm;
+        }
+
+        public static int SizeInBytes { get { return 12 + 12 + 4; } }
+
+        //Declares the elements of the custom vertex. 
+        //Each vertex stores information on the current 
+        //position, color, and normal.
+        public static readonly Microsoft.Xna.Framework.Graphics.VertexElement[] VertexElements =
+            new Microsoft.Xna.Framework.Graphics.VertexElement[] 
+            {
+                new Microsoft.Xna.Framework.Graphics.VertexElement(0, 0, Microsoft.Xna.Framework.Graphics.VertexElementFormat.Vector3,
+                        Microsoft.Xna.Framework.Graphics.VertexElementMethod.Default,
+                        Microsoft.Xna.Framework.Graphics.VertexElementUsage.Position, 0),
+                new Microsoft.Xna.Framework.Graphics.VertexElement(0, sizeof(float) * 3,
+                        Microsoft.Xna.Framework.Graphics.VertexElementFormat.Color, Microsoft.Xna.Framework.Graphics.VertexElementMethod.Default,
+                       Microsoft.Xna.Framework.Graphics.VertexElementUsage.Color, 0),
+                new Microsoft.Xna.Framework.Graphics.VertexElement(0, (sizeof(float) * 3) + sizeof(float),
+                        Microsoft.Xna.Framework.Graphics.VertexElementFormat.Vector3, Microsoft.Xna.Framework.Graphics.VertexElementMethod.Default,
+                       Microsoft.Xna.Framework.Graphics.VertexElementUsage.Normal, 0)     
+            };
     }
 
     public struct Group
