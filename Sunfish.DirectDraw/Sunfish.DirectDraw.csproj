@@ -65,6 +65,12 @@
     <Compile Include="Bitm.cs" />
     <Compile Include="BitmapEditorGame.cs" />
     <Compile Include="DirectDrawSurface.cs" />
+    <Compile Include="ModelViewer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ModelViewer.Designer.cs">
+      <DependentUpon>ModelViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="EditorGame.cs" />
     <Compile Include="Surface.cs" />
@@ -81,6 +87,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ModelViewer.resx">
+      <DependentUpon>ModelViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="transparancy.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

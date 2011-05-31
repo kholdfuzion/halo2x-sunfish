@@ -502,6 +502,14 @@ namespace Sunfish.Mode
         public int RawDataOffset;
         public int RawDataSize;
 
+        public Resource(ResourceType type, ResourceSubType subtype, int offset, int size)
+        {
+            MainRawDataType = type;
+            SubRawDataType = subtype;
+            RawDataOffset = offset;
+            RawDataSize = size;
+        }
+
         public Resource(Stream stream)
         {
             BinaryReader br = new BinaryReader(stream);
@@ -573,14 +581,14 @@ namespace Sunfish.Mode
                     Resources[i] = new Resource(tag.TagStream);
                 }
             }
-            if (Globals.IsExternalResource(tag.RawInfos[RawOffset].Address)) { return; }
+            if (Globals.IsExternalResource(RawOffset)) { return; }
             tag.RawStream.Position = tag.RawInfos[RawOffset].Address;
             Mesh = new Mesh(tag.RawStream, Resources, this, boundingBox);
         }
 
         public byte[] Serialize(Tag tag, BoundingBox boundingBox)
         {
-            tag.AddRaw(Mesh.Serialize(this, boundingBox));
+            tag.AddRaw(Mesh.Serialize(this, boundingBox, out Resources));
             RawOffset = tag.RawInfos.Length - 1;
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);

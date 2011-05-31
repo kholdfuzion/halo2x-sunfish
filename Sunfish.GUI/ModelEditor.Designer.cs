@@ -28,11 +28,38 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.xnaViewer1 = new XNAViewer.XNAViewer();
+            this.SuspendLayout();
+            // 
+            // xnaViewer1
+            // 
+            this.xnaViewer1.BackColor = System.Drawing.Color.CornflowerBlue;
+            this.xnaViewer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.xnaViewer1.Location = new System.Drawing.Point(0, 0);
+            this.xnaViewer1.Name = "xnaViewer1";
+            this.xnaViewer1.Size = new System.Drawing.Size(534, 565);
+            this.xnaViewer1.TabIndex = 0;
+            // 
+            // ModelEditor
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(534, 565);
+            this.Controls.Add(this.xnaViewer1);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.KeyPreview = true;
+            this.Name = "ModelEditor";
             this.Text = "ModelEditor";
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.ModelEditor_KeyUp);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ModelEditor_KeyDown);
+            this.Resize += new System.EventHandler(this.ModelEditor_Resize);
+            this.ResumeLayout(false);
+
         }
 
         #endregion
+
+        private XNAViewer.XNAViewer xnaViewer1;
+
     }
 }
