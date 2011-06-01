@@ -10,12 +10,14 @@ using Sunfish.Canvas;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Windows.Forms;
 
 namespace Sunfish.GUI
 {
     public partial class ModelEditor : DockContent
     {
-        Game1 game = new Game1();
+        Game1 game;
+        Sunfish.Mode.Model m;
 
         public ModelEditor()
         {
@@ -24,183 +26,102 @@ namespace Sunfish.GUI
 
         internal void LoadTag(Tag tag)
         {
-            Sunfish.Mode.Model m = new Sunfish.Mode.Model(tag);
+            m = new Sunfish.Mode.Model(tag);
             //m.Sections[0].Mesh.ExportWavefrontObject(m.Shaders);
             //WavefrontObject wfo = Wavefront.ParseWavefrontOBJFile(@"O:\import_test.obj");
             //m.Sections[0].Mesh.ImportWavefrontObject(wfo, m.BoundingBoxes[0]);
-            m.Sections[0].Mesh.ExportWavefrontObject(m.Shaders);
+            //m.Sections[0].Mesh.ExportWavefrontObject(m.Shaders);
             //Tag newTag = m.CreateTag();
             //Model m2 = new Model(newTag);
             //newTag.Save(tag.Filename + "copy");
-            game.Mesh = m.Sections[0].Mesh;
+            foreach (Mode.Region r in m.Regions)
+                listBox1.Items.Add(r.name);
+            game = new Game1(m, xnaViewer1.Height, xnaViewer1.Width);
             xnaViewer1.RunGame(game);
         }
 
         private void ModelEditor_Resize(object sender, EventArgs e)
         {
-            game.ViewportHeight = this.Height;
-            game.ViewportWidth = this.Width;
+            if (game != null)
+            {
+                game.ViewportHeight = this.xnaViewer1.Height;
+                game.ViewportWidth = this.xnaViewer1.Width;
+            }
         }
 
         private void ModelEditor_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             UpdateCamera(e);
-            if (e.KeyCode == System.Windows.Forms.Keys.Add)
-                game.cameraControls.Zoom = 1;
-            if (e.KeyCode == System.Windows.Forms.Keys.Subtract)
-                game.cameraControls.Zoom = -1;
         }
 
         private void ModelEditor_KeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             UpdateCamera(e);
-            if (e.KeyCode == System.Windows.Forms.Keys.Add)
-                game.cameraControls.Zoom = 0;
-            if (e.KeyCode == System.Windows.Forms.Keys.Subtract)
-                game.cameraControls.Zoom = 0;
         }
 
         private void UpdateCamera(System.Windows.Forms.KeyEventArgs e)
         {
-            game.cameraControls.Orbit = e.Control;
+            game.cameraControls.Ctrl = e.Control;
+            game.cameraControls.Alt = e.Alt;
         }
-    }
 
-    public class Cube
-    {
-        public short[] indices;
-        public VertexPositionColor[] vertices;
-
-        public Cube()
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            vertices = new VertexPositionColor[8];
-            vertices[0] = new VertexPositionColor(new Vector3(-10f, 0f, 10f), Color.White);
-            vertices[1] = new VertexPositionColor(new Vector3(-10f, 0f, -10f), Color.Red);
-            vertices[2] = new VertexPositionColor(new Vector3(10f, 0f, -10f), Color.Yellow);
-            vertices[3] = new VertexPositionColor(new Vector3(10f, 0f, 10f), Color.Green);
-            vertices[4] = new VertexPositionColor(new Vector3(-10f, 20f, 10f), Color.Blue);
-            vertices[5] = new VertexPositionColor(new Vector3(10f, 20f, 10f), Color.Purple);
-            vertices[6] = new VertexPositionColor(new Vector3(10f, 20f, -10f), Color.Orange);
-            vertices[7] = new VertexPositionColor(new Vector3(-10f, 20f, -10f), Color.Violet);
-            indices = new short[36] 
-            { 
-                /*
-f 1 2 3
-f 3 4 1 
-f 5 6 7 
-f 7 8 5 
-f 1 4 6 
-f 6 5 1 
-f 4 3 7 
-f 7 6 4
-f 3 2 8 
-f 8 7 3 
-f 2 1 5 
-f 5 8 2 
-                 */
-                0, 1, 2, 
-                2, 3, 0, 
-                4, 5, 6, 
-                6, 7, 4, 
-                0, 3, 5, 
-                5, 4, 0, 
-                3, 2, 6, 
-                6, 5, 3, 
-                2, 1, 7, 
-                7, 6, 2, 
-                1, 0, 4, 
-                4, 7, 1 
-            };
+            game.SelectedIndex = listBox1.SelectedIndex;            
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            game.LevelOfDetail = trackBar1.Value;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (game.SelectedIndex == -1) { return; }
+            OpenFileDialog ofd = new OpenFileDialog();
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                Mode.WavefrontObject wfo = Sunfish.Mode.Wavefront.ParseWavefrontOBJFile(ofd.FileName);
+                
+                m.Sections[m.Regions[game.SelectedIndex].permutation[0].indices[game.LevelOfDetail]].Mesh.ImportWavefrontObject(wfo, m.BoundingBoxes[0]);
+                xnaViewer1.PauseGame();
+                game.UpdateModel(m);
+                xnaViewer1.ResumeGame();
+            }
         }
     }
 
     public class CameraControls
     {
-        public bool KeyboardControlled = false;
-        public bool MouseControlled = true;
-        public int Zoom = 0;
-        public bool Orbit = false;
-        KeyboardState keyState;
+        public bool Ctrl = false;
+        public bool Alt = false;
         MouseState mouseState;
-        int lastScrollWheelValue;
-        Point lastMouseLocation;
+        MouseState lastMouseState;
 
         public void Update(Camera camera)
         {
             Vector3 Translation = Vector3.Zero;
-            keyState = Keyboard.GetState();
-            mouseState = Mouse.GetState();
-            if (KeyboardControlled)
+            mouseState = Mouse.GetState(); 
+            if (mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && Ctrl && Alt)
             {
-                if (keyState.IsKeyDown(Keys.Left) || keyState.IsKeyDown(Keys.A))
-                {
-                    Translation.X -= 0.2f;
-                }
-                if (keyState.IsKeyDown(Keys.Right) || keyState.IsKeyDown(Keys.D))
-                {
-                    Translation.X += 0.2f;
-                }
-                if (keyState.IsKeyDown(Keys.PageUp) || keyState.IsKeyDown(Keys.X))
-                {
-                    Translation.Y += 0.2f;
-                }
-                if (keyState.IsKeyDown(Keys.PageDown) || keyState.IsKeyDown(Keys.Z))
-                {
-                    Translation.Y -= 0.2f;
-                }
-                if (keyState.IsKeyDown(Keys.Up) || keyState.IsKeyDown(Keys.W))
-                {
-                    Translation.Z -= 0.2f;
-                }
-                if (keyState.IsKeyDown(Keys.Down) || keyState.IsKeyDown(Keys.S))
-                {
-                    Translation.Z += 0.2f;
-                }
+                float Zoom = mouseState.Y - lastMouseState.Y;
+                Zoom *= 0.2f;
+                camera.ZoomToTarget(Zoom);
             }
-            if (MouseControlled)
+            else if (mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && Ctrl)
             {
-
-                if (mouseState.MiddleButton == ButtonState.Pressed && Orbit)
-                {
-
-                    float hRot = (float)(lastMouseLocation.X - mouseState.X) / 180f;
-                    float vRot = (float)(lastMouseLocation.Y - mouseState.Y) / 180f;
-                    Vector3 rots = new Vector3(hRot, vRot, 0);
-                    if (vRot != 0 || hRot != 0)
-                        camera.Orbit(rots);
-
-                }
-                //else if (mouseState.MiddleButton == ButtonState.Pressed)
-                //{
-                //    Vector3 Start = new Vector3(lastMouseLocation.X, lastMouseLocation.Y, 0);
-                //    Vector3 End = new Vector3(mouseState.X, mouseState.Y, 0);
-                //    if (Start != Vector3.Zero || End != Vector3.Zero)
-                //        camera.MoveCamera(Start, End);
-                //}
-
-                //if (keyState.IsKeyDown(Keys.Add))
-                //{
-                //    zoom += 1;
-                //}
-
-                //if (keyState.IsKeyDown(Keys.Subtract))
-                //{
-                //    zoom -= 1;
-                //}
-
-                //if (keyState.IsKeyDown(Keys.Z))
-                //{
-                //    camera.LookAt(new Vector3(0, 10, 0));
-                //}
-
-                //if (lastScrollWheelValue != mouseState.ScrollWheelValue)
-                //{
-                //    zoom = (float)(mouseState.ScrollWheelValue - lastScrollWheelValue) / 10f;
-                //    lastScrollWheelValue = mouseState.ScrollWheelValue;
-                //}
+                float hRot = (float)(lastMouseState.X - mouseState.X) / 180f;
+                float vRot = (float)(lastMouseState.Y - mouseState.Y) / 180f;
+                Vector3 rots = new Vector3(hRot, vRot, 0);
+                if (vRot != 0 || hRot != 0)
+                    camera.Orbit(rots);
             }
-            camera.ZoomToTarget(Zoom);
-            camera.Strafe(Translation); lastMouseLocation = new Point(mouseState.X, mouseState.Y);
+            else if (mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && Alt)
+            {
+                Vector2 move = new Vector2(mouseState.X - lastMouseState.X, mouseState.Y - lastMouseState.Y);
+                camera.MoveCamera(move);
+            }
+            lastMouseState = mouseState;
         }
 
         public void DrawInformation(SpriteBatch spriteBatch, SpriteFont font)
@@ -208,19 +129,18 @@ f 5 8 2
             spriteBatch.DrawString(font, "Mouse Wheel Value: " + mouseState.ScrollWheelValue.ToString(), new Vector2(10, 10), Color.Red);
             spriteBatch.DrawString(font, "X: " + mouseState.X.ToString(), new Vector2(10, 25), Color.Red);
             spriteBatch.DrawString(font, "Y: " + mouseState.Y.ToString(), new Vector2(10, 40), Color.Red);
-            spriteBatch.DrawString(font, "X1: " + lastMouseLocation.X.ToString(), new Vector2(10, 55), Color.Red);
-            spriteBatch.DrawString(font, "Y2: " + lastMouseLocation.Y.ToString(), new Vector2(10, 70), Color.Red);
         }
     }
 
     public class Camera
     {
-        Vector3 camPosition;
-        Vector3 camTarget;
         Vector3 camUp;
         Vector3 camRight;
         Vector3 camForward;
         Vector3 camRotations;
+        Vector3 camPosition;
+        Matrix camTransformations;
+        float camZoom;
         public Matrix viewMatrix;
         public Matrix projectionMatrix;
         GraphicsDevice device;
@@ -228,27 +148,38 @@ f 5 8 2
         public Camera(GraphicsDevice graphicsDevice)
         {
             this.device = graphicsDevice;
-            this.camPosition = new Vector3(0, 0, 2.5f);
-            this.camTarget = new Vector3(0, 0, 0);
+            this.camZoom = 5f;
             this.camForward = Vector3.Forward;
             this.camUp = Vector3.Up;
             this.camRight = Vector3.Right;
             this.camRotations = Vector3.Zero;
+            this.camTransformations = Matrix.Identity;
             CalculateFrame();
             Update();
         }
 
         public void LookAt(Vector3 target)
         {
-            camTarget = target;
+            //camTarget = target;
+            // Vector3 orig = camTarget - camPosition;
+            camTransformations *= Matrix.CreateTranslation(target);
+            CalculateFrame();
         }
 
         public void CalculateFrame()
         {
-            Quaternion q = Quaternion.CreateFromYawPitchRoll(camRotations.X, camRotations.Y, camRotations.Z);
-            this.camForward = Vector3.Transform(Vector3.Forward, q);
-            this.camUp = Vector3.Transform(Vector3.Up, q);
-            this.camRight = Vector3.Transform(Vector3.Right, q);
+
+            //Quaternion q = Quaternion.CreateFromYawPitchRoll(camRotations.X, camRotations.Y, camRotations.Z);
+            Quaternion q;
+            Vector3 s, t;
+            camTransformations.Decompose(out s, out q, out t);
+            this.camForward = Vector3.Transform(Vector3.UnitY, q);
+            this.camForward.Normalize();
+            this.camUp = Vector3.Transform(Vector3.UnitZ, q);
+            camUp.Normalize();
+            this.camRight = Vector3.Transform(Vector3.UnitX, q);
+            camRight.Normalize();
+            this.camPosition = Vector3.Multiply(Vector3.Multiply(camForward, -0.1f), camZoom) + t;
         }
 
         public void Strafe(Vector3 translation)
@@ -262,35 +193,37 @@ f 5 8 2
             CalculateFrame();
             Vector3 x = Vector3.Multiply(camRight, translation.X);
             Vector3 y = Vector3.Multiply(camUp, translation.Y);
-            camTarget = Vector3.Add(camTarget, x);
+            //camTarget = Vector3.Add(camTarget, x);
             camPosition = Vector3.Add(camPosition, x);
-            camTarget = Vector3.Add(camTarget, y);
+            //camTarget = Vector3.Add(camTarget, y);
             camPosition = Vector3.Add(camPosition, y);
         }
 
         public void Orbit(Vector3 rots)
         {
             CalculateFrame();
-            Matrix quat1 = Matrix.CreateFromYawPitchRoll(rots.X, 0, 0);
+            Matrix quat1 = Matrix.CreateFromAxisAngle(Vector3.UnitZ, rots.X);//Matrix.CreateFromYawPitchRoll(rots.X, 0, 0);
             Vector3 perpendicularAxis = camRight;
             Matrix quat2 = Matrix.CreateFromAxisAngle(perpendicularAxis, rots.Y);
             quat1 = quat2 * quat1;
-            camRotations.X += rots.X;
-            camRotations.Y += rots.Y;
+            camTransformations *= quat1;
             Vector3 pos = Vector3.Transform(camPosition, quat1);
             camPosition = pos;
             CalculateFrame();
         }
 
-        public void MoveCamera(Vector3 mousePointInitial, Vector3 mousePointFinal)
+        public void MoveCamera(Vector2 translation)
         {
             Update();
-            CalculateFrame();
-            float distanceFromCameraTarget = (camPosition - camTarget).Length();
+            CalculateFrame(); 
+            Quaternion q;
+            Vector3 s, t;
+            camTransformations.Decompose(out s, out q, out t);
+            float distanceFromCameraTarget = (camPosition - t).Length();
             float farClippingRange = 300f;
             float percentageWorld = distanceFromCameraTarget / farClippingRange;
 
-            Vector3 PercentageScreen = mousePointFinal - mousePointInitial;
+            Vector3 PercentageScreen = new Vector3(translation.X, translation.Y, 0);
             Vector3 Right = device.Viewport.Unproject(new Vector3(0, 250, 1), projectionMatrix, viewMatrix, Matrix.Identity);
             Vector3 Left = device.Viewport.Unproject(new Vector3(500, 250, 1), projectionMatrix, viewMatrix, Matrix.Identity);
             Vector3 Top = device.Viewport.Unproject(new Vector3(250, 0, 1), projectionMatrix, viewMatrix, Matrix.Identity);
@@ -300,23 +233,21 @@ f 5 8 2
             Vector3 VerticalTranslation = Vector3.Multiply((Bottom - Top), percentageWorld);
             HorizontalTranslation *= -(PercentageScreen.X / 500);
             VerticalTranslation *= -(PercentageScreen.Y / 500);
-            camTarget += HorizontalTranslation;
-            camPosition += HorizontalTranslation;
-            camTarget += VerticalTranslation;
-            camPosition += VerticalTranslation;
+            camTransformations *= Matrix.CreateTranslation(HorizontalTranslation);
+            camTransformations *= Matrix.CreateTranslation(VerticalTranslation);
         }
 
         public void ZoomToTarget(float distanceToZoom)
         {
-            Vector3 AngleofZoom = Vector3.Subtract(camTarget, camPosition);
-            AngleofZoom.Normalize();
-            Vector3 Translation = Vector3.Multiply(AngleofZoom, distanceToZoom);
-            camPosition = Vector3.Add(camPosition, Translation);
+            CalculateFrame();
+            camZoom += distanceToZoom;
+            if (camZoom < 0.01f) camZoom = 0.01f;
+            CalculateFrame();
         }
 
         public void Update()
         {
-            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, camUp);
+            viewMatrix = Matrix.CreateLookAt(camPosition, camPosition + camForward, camUp);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 1.0f, 300.0f);
         }
 
@@ -332,10 +263,12 @@ f 5 8 2
     /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
+        public int LevelOfDetail = 5;
+        public int SelectedIndex = -1;
         SpriteFont font;
         public CameraControls cameraControls;
-        Camera camera;
-        public Sunfish.Mode.Mesh Mesh;
+        public Camera camera;
+        public Sunfish.Mode.Model Model;
         BasicEffect effect;
         GraphicsDevice device;
         GraphicsDeviceManager graphics;
@@ -346,8 +279,11 @@ f 5 8 2
         public int ViewportWidth { get { return width; } set { if (value > 0) width = value; } }
         public int ViewportHeight { get { return height; } set { if (value > 0) height = value; } }
 
-        public Game1()
+        public Game1(Sunfish.Mode.Model model, int height, int width)
         {
+            this.width = width;
+            this.height = height;
+            this.Model = model;
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
         }
@@ -360,8 +296,6 @@ f 5 8 2
         /// </summary>
         protected override void Initialize()
         {
-            width = 500;
-            height = 500;
             graphics.PreferredBackBufferWidth = width;
             graphics.PreferredBackBufferHeight = height;
             graphics.IsFullScreen = false;
@@ -380,6 +314,9 @@ f 5 8 2
 
             device = graphics.GraphicsDevice;
             camera = new Camera(device);
+            Vector3 mid = new Vector3((Model.BoundingBoxes[0].X.Min + Model.BoundingBoxes[0].X.Max) / 2, (Model.BoundingBoxes[0].Y.Min + Model.BoundingBoxes[0].Y.Max) / 2, (Model.BoundingBoxes[0].Z.Min + Model.BoundingBoxes[0].Z.Max) / 2);
+            camera.LookAt(new Vector3(mid.X, mid.Y, mid.Z));
+            camera.ZoomToTarget(20f);
             cameraControls = new CameraControls();
             font = Content.Load<SpriteFont>("debug");
             myVertexDeclaration = new VertexDeclaration(device, VertexPositionColor.VertexElements);
@@ -418,7 +355,7 @@ f 5 8 2
                 GraphicsDevice.Reset(newParams);
             }
             // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
                 this.Exit();
             cameraControls.Update(camera);
             camera.Update();
@@ -433,30 +370,38 @@ f 5 8 2
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(new Color(125, 125, 125));
             GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
             effect.CurrentTechnique = effect.Techniques[0];
             effect.View = camera.viewMatrix;
             effect.Projection = camera.projectionMatrix;
             effect.World = Matrix.Identity;
 
-            effect.Begin();
 
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+            if (Model != null)
             {
-                pass.Begin();
-
-                device.VertexDeclaration = new VertexDeclaration(graphics.GraphicsDevice, Mode.Vertex.VertexElements);
-                if (Mesh != null)
+                for (int i = 0; i < Model.Regions.Length; i++)
                 {
-                    foreach (Mode.Group g in Mesh.Groups)
-                        device.DrawUserIndexedPrimitives<Sunfish.Mode.Vertex>(PrimitiveType.TriangleStrip, Mesh.Vertexlist, 0, Mesh.Vertices.Length, Mesh.Indices, g.IndiceStart, g.IndiceCount - 2);
-                }  
-                 
-                pass.End();
-            }
+                    Mode.Mesh mesh = Model.Sections[Model.Regions[i].permutation[0].indices[LevelOfDetail]].Mesh;
+                    if (i == SelectedIndex) effect.DiffuseColor = new Vector3(1, 0, 0);
+                    else effect.DiffuseColor = Color.Gray.ToVector3();
 
-            effect.End();
+                    effect.Begin();
+
+                    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+
+                        device.VertexDeclaration = new VertexDeclaration(graphics.GraphicsDevice, Mode.Vertex.VertexElements);
+                        foreach (Mode.Group g in mesh.Groups)
+                            device.DrawUserIndexedPrimitives<Sunfish.Mode.Vertex>(PrimitiveType.TriangleStrip, mesh.Vertexlist, 0, mesh.Vertices.Length, mesh.Indices, g.IndiceStart, g.IndiceCount - 2);
+
+                        pass.End();
+                    }
+
+                    effect.End();
+                }
+            }
 
             //spriteBatch.Begin();
             //cameraControls.DrawInformation(spriteBatch, font);
@@ -464,6 +409,11 @@ f 5 8 2
             //spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        internal void UpdateModel(Sunfish.Mode.Model m)
+        {
+            Model = m;
         }
     }
 }

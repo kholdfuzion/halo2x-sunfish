@@ -74,6 +74,8 @@ namespace Sunfish.Mode
                                 {
                                     case VertexType.Rigid: Stride = 0;//xyz
                                         break;
+                                    case VertexType.RigidBoned: Stride = 2;//xyz
+                                        break;
                                     default: throw new Exception();
                                 }
 

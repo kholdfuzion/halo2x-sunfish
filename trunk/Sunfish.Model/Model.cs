@@ -444,7 +444,7 @@ namespace Sunfish.Mode
         public const int Size = 16;
 
         public string name;
-        short[] indices;
+        public short[] indices;
 
         public Permutation(Tag tag)
         {
