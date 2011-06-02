@@ -801,12 +801,12 @@ namespace Sunfish.Mode
     public class Marker
     {
         public const int Size = 36;
-        sbyte RegionIndex;
-        sbyte PermutationIndex;
-        short NodeIndex;
-        Vector3 Translation;
-        Quaternion Rotation;
-        int Scale;
+        public sbyte RegionIndex;
+        public sbyte PermutationIndex;
+        public short NodeIndex;
+        public Vector3 Translation;
+        public Quaternion Rotation;
+        public int Scale;
 
         public Marker(Stream stream)
         {

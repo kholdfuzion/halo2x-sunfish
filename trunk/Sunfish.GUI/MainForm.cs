@@ -48,9 +48,20 @@ namespace Sunfish.GUI
             f.treeView1.DoubleClick += new EventHandler(treeView1_DoubleClick);
             f.Text = "Solution Explorer";
             f.Show(this.dockPanel1,  WeifenLuo.WinFormsUI.Docking.DockState.DockRight);
+            this.dockPanel1.ActiveDocumentChanged += new EventHandler(dockPanel1_ActiveDocumentChanged);
 
             project = Project.Load(@"E:\Users\root\Documents\Sunfish 2011\Projects\Yogurt\Yogurt.h2proj");
             LoadProject();
+        }
+
+        void dockPanel1_ActiveDocumentChanged(object sender, EventArgs e)
+        {
+            if (Disposing) { return; }
+            foreach(IDockContent content in dockPanel1.Documents)
+            {
+                if (content == dockPanel1.ActiveDocument) { content.OnActivated(null); }
+                else content.OnDeactivate(null);
+            }
         }
 
         void treeView1_DoubleClick(object sender, EventArgs e)
