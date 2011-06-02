@@ -44,12 +44,13 @@
             this.xnaViewer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.xnaViewer1.BackColor = System.Drawing.Color.CornflowerBlue;
+            this.xnaViewer1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.xnaViewer1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.xnaViewer1.Location = new System.Drawing.Point(186, 12);
             this.xnaViewer1.Name = "xnaViewer1";
             this.xnaViewer1.Size = new System.Drawing.Size(465, 539);
             this.xnaViewer1.TabIndex = 2;
+            this.xnaViewer1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ModelEditor_MouseClick);
             // 
             // trackBar1
             // 
@@ -113,10 +114,12 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.xnaViewer1);
+            this.DockAreas = WeifenLuo.WinFormsUI.Docking.DockAreas.Document;
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.KeyPreview = true;
             this.Name = "ModelEditor";
             this.Text = "ModelEditor";
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ModelEditor_KeyPress);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.ModelEditor_KeyUp);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ModelEditor_KeyDown);
             this.Resize += new System.EventHandler(this.ModelEditor_Resize);
