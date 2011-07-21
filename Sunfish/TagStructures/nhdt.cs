@@ -24,7 +24,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(28),
 					new TagReference(),
 					new TagReference(),
@@ -39,24 +39,24 @@ namespace Sunfish.TagStructures
 					Values = InitializeValues(new Value[]
 					{
 						new Data(4),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
 					});
@@ -69,10 +69,10 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(28),
 					new TagReference(),
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(32),
 					new TagBlockArray(typeof(TagBlock1_0)),
 				});
@@ -84,24 +84,24 @@ namespace Sunfish.TagStructures
 					Values = InitializeValues(new Value[]
 					{
 						new Data(4),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
-						new StringReference(),
-						new StringReference(),
+						new StringReferenceValue(),
+						new StringReferenceValue(),
 						new Data(4),
 						new ByteArray(),
 					});
@@ -114,7 +114,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(28),
 					new TagReference(),
 					new TagReference(),

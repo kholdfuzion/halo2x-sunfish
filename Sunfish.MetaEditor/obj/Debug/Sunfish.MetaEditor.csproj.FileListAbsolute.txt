@@ -1,0 +1,8 @@
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\bin\Debug\Sunfish.MetaEditor.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\bin\Debug\Sunfish.MetaEditor.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\Sunfish.MetaEditor.Form1.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\Sunfish.MetaEditor.Properties.Resources.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\Sunfish.MetaEditor.csproj.GenerateResource.Cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\Sunfish.MetaEditor.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.MetaEditor\obj\Debug\Sunfish.MetaEditor.pdb

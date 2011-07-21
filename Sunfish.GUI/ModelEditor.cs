@@ -14,7 +14,7 @@ using System.Windows.Forms;
 
 namespace Sunfish.GUI
 {
-    public partial class ModelEditor : DockContent
+    public partial class ModelEditor : SunfishDocument
     {
         Game1 game;
         Sunfish.Mode.Model m;
@@ -24,9 +24,11 @@ namespace Sunfish.GUI
             InitializeComponent();
         }
 
-        internal void LoadTag(Tag tag)
+        internal void LoadTag(string filename)
         {
-            m = new Sunfish.Mode.Model(tag);
+            this.Tag = filename;
+            this.HaloTag = new Tag(filename);
+            m = new Sunfish.Mode.Model(HaloTag);
             foreach (Mode.Region r in m.Regions)
                 listBox1.Items.Add(r.name);
             game = new Game1(m, xnaViewer1.Height, xnaViewer1.Width);
@@ -76,7 +78,7 @@ namespace Sunfish.GUI
             {
                 Mode.WavefrontObject wfo = Sunfish.Mode.Wavefront.ParseWavefrontOBJFile(ofd.FileName);
                 xnaViewer1.PauseGame();
-                m.Sections[m.Regions[game.SelectedIndex].permutation[0].indices[game.LevelOfDetail]].Mesh.ImportWavefrontObject(wfo, m.BoundingBoxes[0]);
+                m.Sections[m.Regions[game.SelectedIndex].permutation[0].indices[game.LevelOfDetail]].mesh.ImportWavefrontObject(wfo, m.BoundingBoxes[0]);
                 xnaViewer1.ResumeGame();
             }
         }
@@ -111,6 +113,16 @@ namespace Sunfish.GUI
                     game.GraphicsDevice.RenderState.FillMode = FillMode.Solid;
                 else game.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Tag t = m.CreateTag();
+            string path = Path.GetDirectoryName(HaloTag.Filename);
+            string tt = Directory.GetCurrentDirectory();
+            string yu=path.Replace(tt, string.Empty);
+            t.Filename = Path.Combine(path, t.Filename).Remove(0, tt.Length + 1);
+            t.Save();            
         }
     }
 
@@ -378,7 +390,7 @@ namespace Sunfish.GUI
                 {
                     for (int i = 0; i < Model.Regions.Length; i++)
                     {
-                        Mode.Mesh mesh = Model.Sections[Model.Regions[i].permutation[0].indices[LevelOfDetail]].Mesh;
+                        Mode.Mesh mesh = Model.Sections[Model.Regions[i].permutation[0].indices[LevelOfDetail]].mesh;
                         if (i == SelectedIndex) effect.DiffuseColor = new Vector3(1, 0, 0);
                         else effect.DiffuseColor = Color.Gray.ToVector3();
 

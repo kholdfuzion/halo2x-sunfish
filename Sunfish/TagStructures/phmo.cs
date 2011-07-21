@@ -48,8 +48,8 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new Data(8),
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -61,8 +61,8 @@ namespace Sunfish.TagStructures
 				{
 					new Data(8),
 					new TagBlockArray(typeof(TagBlock1_0)),
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 				});
 			}
 			public class TagBlock1_0 : TagBlock
@@ -84,8 +84,8 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -95,7 +95,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -105,7 +105,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -115,7 +115,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -125,7 +125,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -135,8 +135,8 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -146,7 +146,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -192,7 +192,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -202,7 +202,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -212,7 +212,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 					new TagBlockArray(typeof(TagBlock1_0)),
 				});
 			}
@@ -222,7 +222,7 @@ namespace Sunfish.TagStructures
 				{
 					Values = InitializeValues(new Value[]
 					{
-						new StringReference(),
+						new StringReferenceValue(),
 						new TagBlockArray(typeof(TagBlock2_0)),
 					});
 				}
@@ -240,27 +240,27 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
 		public class TagBlock0_20 : TagBlock
 		{
-			public TagBlock0_20() : base(132, 16)
+			public TagBlock0_20() : base(132, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
 		public class TagBlock0_21 : TagBlock
 		{
-			public TagBlock0_21() : base(120, 16)
+			public TagBlock0_21() : base(120, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -270,7 +270,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -280,7 +280,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}

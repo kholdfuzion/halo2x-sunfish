@@ -41,7 +41,7 @@ namespace Sunfish
         public void End()
         {
             Timer.Stop();
-            result = Timer.ElapsedMilliseconds.ToString() + " Milliseconds";
+            result = Timer.ElapsedMilliseconds.ToString() + " ms";
             Timer.Reset();
         }
         public string Result { get { return result; } }

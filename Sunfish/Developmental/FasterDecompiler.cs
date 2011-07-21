@@ -20,6 +20,12 @@ namespace Sunfish.Developmental
             Types = b.CreateBlocks();
         }
 
+        public static void ReloadBlocks()
+        {
+            Blocks b = new Blocks();
+            Types = b.CreateBlocks();
+        }
+
         Dictionary<string, Block> CreateBlocks()
         {
             Assembly asm = Assembly.GetExecutingAssembly();
@@ -54,7 +60,7 @@ namespace Sunfish.Developmental
             Block block = new Block() { Size = Tag.Size, Alignment = Tag.Alignment };
             List<Block> nestedBlocks = new List<Block>();
             List<Value> values = new List<Value>();
-            List<Raw> raws = new List<Raw>();
+            List<ResourceReference> raws = new List<ResourceReference>();
             if (Tag.Values != null)
             {
                 foreach (TagStructures.Value val in Tag.Values)
@@ -63,22 +69,27 @@ namespace Sunfish.Developmental
                     {
                         Block nestedBlock = RecursivelyParseTagBlock((TagBlock)Activator.CreateInstance((val as TagBlockArray).TagBlockType));
                         nestedBlock.Offset = val.Offset;
+                        nestedBlock.Parent = block;
+                        nestedBlock.Index = nestedBlocks.Count;
                         nestedBlocks.Add(nestedBlock);
                     }
                     else if (val is ByteArray)
                     {
                         ByteArray array = val as ByteArray;
-                        Block nestedBlock = new Block() { 
-                            Alignment = array.Alignment, 
+                        Block nestedBlock = new Block()
+                        {
+                            Parent = block,
+                            Index = nestedBlocks.Count,
+                            Alignment = array.Alignment,  
                             NestedBlocks = new Block[0], 
                             Offset = array.Offset, 
-                            Raws = new Raw[0], 
+                            Raws = new ResourceReference[0], 
                             Size = 1, 
                             Values = new Value[0] 
                         };
                         nestedBlocks.Add(nestedBlock);
                     }
-                    else if (val is StringReference)
+                    else if (val is Sunfish.TagStructures.StringReferenceValue)
                     {
                         values.Add(new Value() { Offset = val.Offset, Type = Value.ValueType.StringId });
                     }
@@ -93,7 +104,7 @@ namespace Sunfish.Developmental
                     else if (val is RawBlock)
                     {
                         RawBlock rawBlock = val as RawBlock;
-                        raws.Add(new Raw() { Offset0 = rawBlock.lengthOffset, Offset1 = rawBlock.addressOffset });
+                        raws.Add(new ResourceReference() { Offset0 = rawBlock.lengthOffset, Offset1 = rawBlock.addressOffset });
                     }
                 }
             }
@@ -127,7 +138,7 @@ namespace Sunfish.Developmental
         }
     }
 
-    public struct RawInfo
+    public struct ResourceInfo
     {
         public int Length;
         public int Address;
@@ -144,17 +155,19 @@ namespace Sunfish.Developmental
         }
     }
 
-    public struct Block
+    public class Block
     {
+        public Block Parent;
+        public int Index;
         public int Size;
         public int Alignment;
         public int Offset;
         public Value[] Values;
         public Block[] NestedBlocks;
-        public Raw[] Raws;
+        public ResourceReference[] Raws;
     }
 
-    public struct Raw
+    public struct ResourceReference
     {
         public int Offset0;
         public int Offset1;

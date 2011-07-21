@@ -14,16 +14,16 @@ namespace Sunfish.TagStructures
             values.AddRange(new Value[] { 
                 
                 new Data(24),
-                new StringReference(),
-                new StringReference(),
+                new StringReferenceValue(),
+                new StringReferenceValue(),
                 new Data(12),
                 new TagBlockArray(typeof(TagBlock0_0)),
                 new Data(68),
                 new TagReference(),
                 new Data(28),
-                new StringReference(),
-                new StringReference(),
-                new StringReference(),
+                new StringReferenceValue(),
+                new StringReferenceValue(),
+                new StringReferenceValue(),
                 new TagReference(),
                 new TagReference(),
                 new TagReference(),
@@ -62,7 +62,7 @@ namespace Sunfish.TagStructures
             {
                 Values = InitializeValues(new Value[]
 				{
-                    new StringReference(),
+                    new StringReferenceValue(),
 				});
             }
         }
@@ -119,23 +119,23 @@ namespace Sunfish.TagStructures
                 Values = InitializeValues(new Value[]
 				{
                     new Data(4),
-                    new StringReference(),
-                    new StringReference(),
-                    new StringReference(),
-                    new StringReference(),
-                    new StringReference(),
-                    new StringReference(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
                     new Data(68),
-                    new StringReference(),
-                    new StringReference(),
+                    new StringReferenceValue(),
+                    new StringReferenceValue(),
                     new Data(12),
                     new TagBlockArray(typeof(TagBlock1_0)),
                     new TagBlockArray(typeof(TagBlock1_1)),
-                    new StringReference(),
+                    new StringReferenceValue(),
                     new Data(8),
                     new TagReference(),
                     new Data(16),
-                    new StringReference(),
+                    new StringReferenceValue(),
 				});
             }
 

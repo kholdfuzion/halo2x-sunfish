@@ -15,7 +15,7 @@ namespace Sunfish
         private Dictionary<string, int> filenames;
         private Cache<Pointer> pointerCache;
         private Cache<Value> valueCache;
-        private Cache<Raw> rawCache;
+        private Cache<ResourceReference> rawCache;
         private List<Tag> tags;
         private Map map;
         private BinaryReader binReader;
@@ -57,11 +57,11 @@ namespace Sunfish
             map.BaseStream = output;
 
             //reserve header space
-            output.Position = Marshal.SizeOf(typeof(Map.HeaderStruct));
+            output.Position = Marshal.SizeOf(typeof(Header));
 
             //write sound raw
             ProcessTagRawValues(tags[tags.Count - 1], (int)output.Position);
-            binWriter.Write(tags[tags.Count - 1].RawStream.ToArray());
+            binWriter.Write(tags[tags.Count - 1].ResourceStream.ToArray());
             //write model raw
             WriteRawSection("mode");
             //write sbsp raw
@@ -76,7 +76,7 @@ namespace Sunfish
             WriteRawSection("jmad");
 
             //calculate virtual offset
-            map.Header.TagDataSize = map.Index.Length;
+            map.Header.TotalCacheLength = map.Index.Length;
             map.Index.TagTypeArrayVirtualAddress = virtualOffset + 32;
             map.Index.TagInfoArrayVirtualAddress = virtualOffset + 32 + (map.Index.TagTypeCount * 12);
             virtualOffset += map.Index.Length;
@@ -110,9 +110,8 @@ namespace Sunfish
 
             //write header
             map.Header.Checksum = CalculateChecksum();
-            map.Header.Filesize = (int)output.Length;
             output.Position = 0;
-            binWriter.Write(Map.HeaderStruct.RawSerialize(map.Header));
+            binWriter.Write(map.Header.ToByteArray());
 
             //commit write cache
             binWriter.Flush();
@@ -137,7 +136,7 @@ namespace Sunfish
                     int strAddress = binReader.ReadInt32();
                     t.TagStream.Position = strAddress;
                     byte[] unicodeBytes = binReader.ReadBytes(strLength);
-                    List<Map.UnicodeTable.UnicodeEntry> entries = new List<Map.UnicodeTable.UnicodeEntry>(count);
+                    List<UnicodeTable.Entry> entries = new List<UnicodeTable.Entry>(count);
                     for (int i = 0; i < count; i++)
                     {
                         t.TagStream.Position = address + (i * 40);
@@ -152,14 +151,14 @@ namespace Sunfish
                             strBytes.Add(c);
                             offset++;
                         }
-                        entries.Add(new Map.UnicodeTable.UnicodeEntry()
+                        entries.Add(new UnicodeTable.Entry()
                         {
-                            stringID = GetStringId(t.StringIdNames[stringid]),
-                            unicodeString = Encoding.UTF8.GetString(strBytes.ToArray())
+                            StringReference = GetStringId(t.StringReferenceNames[stringid]),
+                            Value = Encoding.UTF8.GetString(strBytes.ToArray())
                         });
                     }
-                    int index = map.EnglishUnicode.Items.Count;
-                    map.EnglishUnicode.Items.AddRange(entries);
+                    int index = map.Unicode.Count;
+                    //map.EnglishUnicode.Items.AddRange(entries);
                     t.TagStream.SetLength(52);
                     t.TagStream.Position = 0;
                     binWriter.Write(new byte[16]);
@@ -181,7 +180,7 @@ namespace Sunfish
             filenames = new Dictionary<string, int>(10000);
             pointerCache = new Cache<Pointer>(10240);
             valueCache = new Cache<Value>(10240);
-            rawCache = new Cache<Raw>(10240);
+            rawCache = new Cache<ResourceReference>(10240);
         }
 
         private void WriteTagBlock()
@@ -197,18 +196,18 @@ namespace Sunfish
                     map.Index.TagEntries[i].VirtualAddress = (int)output.Position + secondaryMagic;
                     map.Index.TagEntries[i].Length = (int)tags[i].TagStream.Length;
                     ProcessTagPointersAndValues(tags[i], (int)output.Position, secondaryMagic);
-                    map.Header.TagDataSize += (int)tags[i].TagStream.Length;
+                    map.Header.TotalCacheLength += (int)tags[i].TagStream.Length;
                     binWriter.Write(tags[i].TagStream.ToArray());
                 }
             }
 
             byte[] buf = Padding.GetBytes(output.Position, 512);
             binWriter.Write(buf);
-            map.Header.TagDataSize += buf.Length;
+            map.Header.TotalCacheLength += buf.Length;
 
             metaLength = (int)output.Position - metaLength;
 
-            map.Header.MetaTableSize = metaLength;
+            map.Header.TagCacheLength = metaLength;
         }
 
         private void Setup()
@@ -230,19 +229,19 @@ namespace Sunfish
 
             Pad();
 
-            map.Header.FilenameIndexOffset = (int)output.Position;
+            map.Header.PathIndexAddress = (int)output.Position;
             foreach (int i in startIndices)
                 binWriter.Write(i);
 
             Pad();
 
-            map.Header.FilenameTableAddress = (int)output.Position;
+            map.Header.PathTableAddress = (int)output.Position;
             foreach (string s in map.Tagnames)
             {
                 binWriter.Write(Encoding.UTF8.GetBytes(s));
                 binWriter.Write(Byte.MinValue);
             }
-            map.Header.FilenameTableLength = (int)output.Position - map.Header.FilenameTableAddress - 1;
+            map.Header.PathTableLength = (int)output.Position - map.Header.PathTableAddress - 1;
         }
 
         private void CreateStringIdTables()
@@ -252,7 +251,7 @@ namespace Sunfish
 
             Pad();
 
-            map.Header.StringId128TableAddress = (int)output.Position;
+            map.Header.String128TableAddress = (int)output.Position;
 
             byte[] blank = new byte[128];
             for (int i = 0; i < map.StringIdNames.Count; i++)
@@ -264,8 +263,8 @@ namespace Sunfish
 
             Pad();
 
-            map.Header.StringIdIndexAddress = (int)output.Position;
-            map.Header.StringIdCount = map.StringIdNames.Count;
+            map.Header.StringIndexAddress = (int)output.Position;
+            map.Header.StringCount = map.StringIdNames.Count;
 
             int start = 0;
             for (int i = 0; i < map.StringIdNames.Count; i++)
@@ -276,13 +275,13 @@ namespace Sunfish
 
             Pad();
 
-            map.Header.StringIdTableAddress = (int)output.Position;
+            map.Header.StringTableAddress = (int)output.Position;
             for (int i = 0; i < map.StringIdNames.Count; i++)
             {
                 binWriter.Write(Encoding.UTF8.GetBytes(map.StringIdNames[i]));
                 binWriter.Write((byte)0x00);
             }
-            map.Header.StringIdTableLength = (int)(output.Position - map.Header.StringIdTableAddress - 1);
+            map.Header.StringTableLength = (int)(output.Position - map.Header.StringTableAddress - 1);
 
             mark.End();
         }
@@ -293,20 +292,20 @@ namespace Sunfish
 
             int unicodeIndexAddress = (int)output.Position;
             int offset = 0;
-            foreach (Map.UnicodeTable.UnicodeEntry item in map.EnglishUnicode.Items)
+            foreach (UnicodeTable.Entry item in map.Unicode[UnicodeTable.Language.English])
             {
-                binWriter.Write(item.stringID);
+                binWriter.Write(item.StringReference);
                 binWriter.Write(offset);
-                offset += Encoding.UTF8.GetByteCount(item.unicodeString) + 1;
+                offset += Encoding.UTF8.GetByteCount(item.Value) + 1;
             }
 
             Pad();
 
             int unicodeTableAddress = (int)output.Position;
             int unicodeTableLength = unicodeTableAddress;
-            foreach (Map.UnicodeTable.UnicodeEntry item in map.EnglishUnicode.Items)
+            foreach (UnicodeTable.Entry item in map.Unicode[UnicodeTable.Language.English])
             {
-                binWriter.Write(Encoding.UTF8.GetBytes(item.unicodeString));
+                binWriter.Write(Encoding.UTF8.GetBytes(item.Value));
                 binWriter.Write((byte)0x00);
             }
             unicodeTableLength = (int)output.Position - unicodeTableAddress;
@@ -315,7 +314,7 @@ namespace Sunfish
             binWriter = new BinaryWriter(tags[0].TagStream);
             binWriter.BaseStream.Position = 400;
 
-            binWriter.Write(map.EnglishUnicode.Items.Count);
+            binWriter.Write(map.Unicode.Count);
             binWriter.Write(unicodeTableLength);
             binWriter.Write(unicodeIndexAddress);
             binWriter.Write(unicodeTableAddress);
@@ -346,7 +345,7 @@ namespace Sunfish
             for (int i = 0; i < tags.Count; i++)
                 if (tags[i].Type == "sbsp")
                 {
-                    sbspId = map.Index.TagEntries[i].Id;
+                    sbspId = map.Index.TagEntries[i].Index;
                     ProcessTagPointersAndValues(tags[i], (int)output.Position, magic);
                     binWriter.Write(tags[i].TagStream.ToArray());
                     break;
@@ -358,7 +357,7 @@ namespace Sunfish
                 if (tags[i].Type == "ltmp")
                 {
                     ltmpVirtualOffset = (int)output.Position + magic;
-                    ltmpId = map.Index.TagEntries[i].Id;
+                    ltmpId = map.Index.TagEntries[i].Index;
                     ProcessTagPointersAndValues(tags[i], (int)output.Position, magic);
                     binWriter.Write(tags[i].TagStream.ToArray());
                     break;
@@ -366,7 +365,7 @@ namespace Sunfish
 
             blockSize = (int)output.Position - blockSize;
 
-            map.Header.TagDataSize += blockSize;
+            map.Header.TotalCacheLength += blockSize;
 
             virtualOffset += blockSize;
 
@@ -393,22 +392,22 @@ namespace Sunfish
         private void ProcessTagInfoAndStringIds()
         {
             map.Tagnames = new string[tags.Count];
-            map.Index.TagEntries = new Map.TagIndex.TagInfo[tags.Count];
+            map.Index.TagEntries = new Index.TagInformation[tags.Count];
             List<string> stringIDNames = new List<string>(10000);
             for (int i = 0; i < tags.Count; i++)
             {
                 map.Tagnames[i] = Path.ChangeExtension(tags[i].Filename, null);
-                map.Index.TagEntries[i] = new Map.TagIndex.TagInfo() { Type = tags[i].Type };
-                foreach (string s in tags[i].StringIdNames)
+                map.Index.TagEntries[i] = new Index.TagInformation() { Type = tags[i].Type };
+                foreach (string s in tags[i].StringReferenceNames)
                 {
                     int index = stringIDNames.BinarySearch(s);
                     if (index < 0) stringIDNames.Insert(~index, s);
                 }
             }
             map.Index.TagInfoCount = map.Index.TagEntries.Length;
-            map.Header.TagCount = map.Index.TagEntries.Length;
+            map.Header.PathCount = map.Index.TagEntries.Length;
             map.StringIdNames = stringIDNames;
-            map.Header.StringIdCount = stringIDNames.Count;
+            map.Header.StringCount = stringIDNames.Count;
         }
 
         private void WriteRawSection(string type)
@@ -418,7 +417,7 @@ namespace Sunfish
                 if (t.Type == type)
                 {
                     ProcessTagRawValues(t, (int)output.Position);
-                    binWriter.Write(t.RawStream.ToArray());
+                    binWriter.Write(t.ResourceStream.ToArray());
                 }
         }
 
@@ -436,18 +435,18 @@ namespace Sunfish
                 if ((index & 0xC0000000) == 0)
                 {
                     tag.TagStream.Position = rawCache.Values[i].Offset0;
-                    binWriter.Write(tag.RawInfos[index].Length);
+                    binWriter.Write(tag.ResourceInformation[index].Length);
                     tag.TagStream.Position = rawCache.Values[i].Offset1;
-                    binWriter.Write((int)(tag.RawInfos[index].Address + rawOffset));
+                    binWriter.Write((int)(tag.ResourceInformation[index].Address + rawOffset));
                 }
             }
             binWriter = new BinaryWriter(output);
         }
 
         private void ProcessTagPointersAndValues(Tag tag, int offset, int magic)
-        {
-            valueCache.Clear();
-            pointerCache.Clear();
+            {
+                valueCache.Clear();
+                pointerCache.Clear();
             Block block = Blocks.Types[tag.Type];
             binReader = new BinaryReader(tag.TagStream);
             binWriter = new BinaryWriter(tag.TagStream);
@@ -461,7 +460,7 @@ namespace Sunfish
                         tag.TagStream.Position = valueCache.Values[i].Offset;
                         index = binReader.ReadInt32();
                         tag.TagStream.Position -= 4;
-                        binWriter.Write(GetStringId(tag.StringIdNames[index]));
+                        binWriter.Write(GetStringId(tag.StringReferenceNames[index]));
                         break;
                     case Value.ValueType.TagId:
                         tag.TagStream.Position = valueCache.Values[i].Offset;
@@ -475,7 +474,7 @@ namespace Sunfish
                         index = binReader.ReadInt32();
                         if (index == -1) continue;
                         tag.TagStream.Position -= 8;
-                        byte[] bytes = Encoding.UTF8.GetBytes(Globals.ReverseString(Map.TagIndex.GetDirtyType(Path.GetExtension(tag.TagReferences[index]).Substring(1))));
+                        byte[] bytes = Encoding.UTF8.GetBytes(Globals.ReverseString(Index.GetDirtyType(Path.GetExtension(tag.TagReferences[index]).Substring(1))));
                         binWriter.Write(bytes, 0, 4);
                         binWriter.Write(GetTagId(tag.TagReferences[index]));
                         break;
@@ -493,19 +492,19 @@ namespace Sunfish
         {
             uint id = 0xE1740000;
             uint salt = 0x00010001;
-            for (int i = 0; i < map.Header.TagCount; i++)
+            for (int i = 0; i < map.Header.PathCount; i++)
             {
-                map.Index.TagEntries[i].Id = (int)id;
+                map.Index.TagEntries[i].Index = (int)id;
                 id += salt;
             }
-            map.Index.GlobalsTagId = map.Index.TagEntries[0].Id;
-            map.Index.ScenarioTagId = map.Index.TagEntries[3].Id;
+            map.Index.GlobalsTagId = map.Index.TagEntries[0].Index;
+            map.Index.ScenarioTagId = map.Index.TagEntries[3].Index;
         }
 
         private int GetTagId(string tagReference)
         {
             int index = filenames[tagReference];
-            return map.Index.TagEntries[index].Id;
+            return map.Index.TagEntries[index].Index;
         }
 
         private int GetStringId(string name)
@@ -520,9 +519,9 @@ namespace Sunfish
 
             for (int i = 0; i < count; i++)
             {
-                foreach (Raw r in block.Raws)
+                foreach (ResourceReference r in block.Raws)
                 {
-                    Raw raw = r;
+                    ResourceReference raw = r;
                     raw.Offset0 = address + (block.Size * i) + r.Offset0;
                     raw.Offset1 = address + (block.Size * i) + r.Offset1;
                     rawCache.Add(raw);

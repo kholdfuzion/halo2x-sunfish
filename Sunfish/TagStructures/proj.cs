@@ -44,7 +44,7 @@ namespace Sunfish.TagStructures
 				{
 					new Data(4),
                     new TagReference(),
-                    new StringReference(),
+                    new StringReferenceValue(),
                     new Data(28),
                     new TagReference(),
                     new Data(12),

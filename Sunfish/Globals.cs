@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace Sunfish
 {
@@ -20,7 +21,7 @@ namespace Sunfish
         /// <summary>
         /// Status
         /// </summary>
-        internal static string Status { get { return status; } set { if (StatusChanged != null) { status = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute.ToString() + ":" + DateTime.Now.Second.ToString() + " - " + value; StatusChanged(status); } } }
+        public static string Status { get { return status; } set { if (StatusChanged != null) { status = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute.ToString() + ":" + DateTime.Now.Second.ToString() + " - " + value; StatusChanged(status); } } }
         private static string status;
 
         public static void ClearStatus()
@@ -53,5 +54,17 @@ namespace Sunfish
 
         public static byte[] GetBytes(long address, int alignment)
         { return new byte[GetCount(address, alignment)]; }
+
+        public static int Pad(this Stream stream)
+        {
+            stream.Write(GetBytes(stream.Position), 0, GetCount(stream.Position));
+            return (int)stream.Position;
+        }
+
+        public static int Pad(this Stream stream, int alignment)
+        {
+            stream.Write(GetBytes(stream.Position, alignment), 0, GetCount(stream.Position, alignment));
+            return (int)stream.Position;
+        }
     }
 }

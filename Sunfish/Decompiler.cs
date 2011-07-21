@@ -16,13 +16,13 @@ namespace Sunfish
         BinaryWriter binWriter;
         Cache<Pointer> pointerCache;
         Cache<Value> valueCache;
-        Cache<Raw> rawCache;
+        Cache<ResourceReference> rawCache;
         string type;
         int metaLength;
         int rawAddress;
         List<int> stringReferences;
         List<int> idReferences;
-        List<RawInfo> rawReferences;
+        List<ResourceInfo> rawReferences;
 
         public Decompiler(Map map)
         {
@@ -35,8 +35,8 @@ namespace Sunfish
             bufferStream = new MemoryStream(1048576);
             pointerCache = new Cache<Pointer>(10240);
             valueCache = new Cache<Value>(10240);
-            rawCache = new Cache<Raw>(10240);
-            rawReferences = new List<RawInfo>(1024);
+            rawCache = new Cache<ResourceReference>(10240);
+            rawReferences = new List<ResourceInfo>(1024);
             stringReferences = new List<int>(4096);
             idReferences = new List<int>(1024);
         }
@@ -52,15 +52,14 @@ namespace Sunfish
             rawCache.Clear();
         }
 
-        public void DecompileUnic(Map.TagIndex.TagInfo tag, string filename, int magic, Map.UnicodeTable unicodeTable)
+        public void DecompileUnic(Index.TagInformation tag, string filename, int magic, UnicodeTable unicodeTable)
         {
             ResetBuffers();
 
             binReader = new BinaryReader(map.BaseStream);
             binWriter = new BinaryWriter(bufferStream);
 
-            type = tag.Type;
-
+            type = tag.Type.ToString();
 
             Block block = Blocks.Types[type];
 
@@ -76,10 +75,10 @@ namespace Sunfish
             for (int i = 0; i < count; i++)
             {
                 bufferStream.Position = 16 + (i * 40);
-                binWriter.Write(map.EnglishUnicode.Items[offset + i].stringID);
+                binWriter.Write(map.Unicode[UnicodeTable.Language.English][offset + i].StringReference);
                 binWriter.Write(unicodeBytes.Count);
                 binWriter.Write(new byte[32]);
-                unicodeBytes.AddRange(Encoding.UTF8.GetBytes(map.EnglishUnicode.Items[offset + i].unicodeString));
+                unicodeBytes.AddRange(Encoding.UTF8.GetBytes(map.Unicode[UnicodeTable.Language.English][offset + i].Value));
                 unicodeBytes.Add(byte.MinValue);
             }
 
@@ -117,14 +116,14 @@ namespace Sunfish
             BufferedWriteFile(filename, stringReferences.ToArray(), idReferences.ToArray(), rawReferences.ToArray());
         }
 
-        public void Decompile(Map.TagIndex.TagInfo tag, string filename, int magic)
+        public void Decompile(Index.TagInformation tag, string filename, int magic)
         {
             ResetBuffers();
 
             binReader = new BinaryReader(map.BaseStream);
             binWriter = new BinaryWriter(bufferStream);
 
-            type = tag.Type;
+            type = tag.Type.ToString();
 
 
             Block block = Blocks.Types[type];
@@ -151,7 +150,7 @@ namespace Sunfish
 
         private delegate void FileWriter(string filename, byte[] buffer);
 
-        public void BufferedWriteFile(string filename, int[] stringReferences, int[] idReferences, RawInfo[] rawReferences)
+        public void BufferedWriteFile(string filename, int[] stringReferences, int[] idReferences, ResourceInfo[] rawReferences)
         {
             MemoryStream stream = new MemoryStream();
             BinaryWriter memWriter = new BinaryWriter(stream);
@@ -160,6 +159,35 @@ namespace Sunfish
             Tag.Info fileHeader = new Tag.Info();
             stream.Position = Tag.Info.Size;
             fileHeader.type = this.type;
+
+            fileHeader.cacheInformationOffset = (int)stream.Position;
+            memWriter.Write(false);
+            memWriter.Write(Padding.GetBytes(stream.Position, 4));
+            memWriter.Write(rawCache.Count);
+            for (int i = 0; i < rawCache.Count; i++)
+                memWriter.Write(rawCache.Values[i].Offset0);
+            int sidCount = 0, tidCount = 0;
+            for (int i = 0; i < valueCache.Count; i++)
+                switch (valueCache.Values[i].Type)
+                {
+                    case Value.ValueType.StringId:
+                        sidCount++; break;
+                    case Value.ValueType.TagId:
+                        tidCount++; break;
+                    case Value.ValueType.TagReference:
+                        tidCount++; break;
+                }
+            memWriter.Write(sidCount);
+            for (int i = 0; i < valueCache.Count; i++)
+                if (valueCache.Values[i].Type == Value.ValueType.StringId)
+                    memWriter.Write(valueCache.Values[i].Offset); 
+            memWriter.Write(tidCount);
+            for (int i = 0; i < valueCache.Count; i++)
+                if (valueCache.Values[i].Type == Value.ValueType.TagId || valueCache.Values[i].Type == Value.ValueType.TagReference)
+                    memWriter.Write(valueCache.Values[i].Offset);
+
+            memWriter.Write(Padding.GetBytes(stream.Position, 512));
+
 
             fileHeader.metaLength = metaLength;
             fileHeader.metaOffset = (int)stream.Position;
@@ -217,8 +245,8 @@ namespace Sunfish
                 fileHeader.idReferencesCount = idReferences.Length;
                 for (int i = 0; i < idReferences.Length; i++)
                 {
-                    string type = map.Index.TagEntries[idReferences[i] & 0x0000FFFF].Type;
-                    type = Map.TagIndex.GetCleanType(type).Trim();
+                    string type = map.Index.TagEntries[idReferences[i] & 0x0000FFFF].Type.ToString();
+                    type = Index.GetCleanType(type).Trim();
                     string tagname = map.Tagnames[idReferences[i] & 0x0000FFFF];
                     memWriter.Write(Encoding.UTF8.GetBytes(Path.ChangeExtension(tagname, type)));
                     memWriter.Write(Encoding.UTF8.GetBytes(Tag.Path.Extension));
@@ -253,7 +281,7 @@ namespace Sunfish
             }
         }
 
-        public void WriteFile(string filename, int[] stringReferences, int[] idReferences, RawInfo[] rawReferences)
+        public void WriteFile(string filename, int[] stringReferences, int[] idReferences, ResourceInfo[] rawReferences)
         {
             if (!Directory.Exists(filename))
                 Directory.CreateDirectory(filename);
@@ -323,8 +351,8 @@ namespace Sunfish
                     fileHeader.idReferencesCount = idReferences.Length;
                     for (int i = 0; i < idReferences.Length; i++)
                     {
-                        string type = map.Index.TagEntries[idReferences[i] & 0x0000FFFF].Type;
-                        type = Map.TagIndex.GetCleanType(type).Trim();
+                        string type = map.Index.TagEntries[idReferences[i] & 0x0000FFFF].Type.ToString();
+                        type = Index.GetCleanType(type).Trim();
                         string tagname = map.Tagnames[idReferences[i] & 0x0000FFFF];
                         binWriter.Write(Encoding.UTF8.GetBytes(Path.ChangeExtension(tagname, type)));
                         binWriter.Write(byte.MinValue);
@@ -401,7 +429,7 @@ namespace Sunfish
                     bufferStream.Position = rawCache.Values[i].Offset1;
                     binWriter.Write(rawReferences.Count);
 
-                    rawReferences.Add(new RawInfo() { Length = count, Address = address });
+                    rawReferences.Add(new ResourceInfo() { Length = count, Address = address });
                 }
             }
         }
@@ -426,9 +454,9 @@ namespace Sunfish
 
             for (int i = 0; i < count; i++)
             {
-                foreach (Raw r in block.Raws)
+                foreach (ResourceReference r in block.Raws)
                 {
-                    Raw raw = r;
+                    ResourceReference raw = r;
                     raw.Offset0 = address + (block.Size * i) + r.Offset0;
                     raw.Offset1 = address + (block.Size * i) + r.Offset1;
                     rawCache.Add(raw);
@@ -489,9 +517,9 @@ namespace Sunfish
             {
                 for (int i = 0; i < count; i++)
                 {
-                    foreach (Raw r in curBlock.Raws)
+                    foreach (ResourceReference r in curBlock.Raws)
                     {
-                        Raw raw = r;
+                        ResourceReference raw = r;
                         raw.Offset0 = blockAddress + (curBlock.Size * i) + r.Offset0;
                         raw.Offset1 = blockAddress + (curBlock.Size * i) + r.Offset1;
                         rawCache.Add(raw);

@@ -33,7 +33,7 @@ namespace Sunfish.TagStructures
 					{
 						new TagReference(),
 						new TagReference(),
-						new StringReference(),
+						new StringReferenceValue(),
 					});
 				}
 			}
@@ -45,7 +45,7 @@ namespace Sunfish.TagStructures
 					{
 						new TagReference(),
 						new TagReference(),
-						new StringReference(),
+						new StringReferenceValue(),
 					});
 				}
 			}
@@ -57,7 +57,7 @@ namespace Sunfish.TagStructures
 					{
 						new TagReference(),
 						new TagReference(),
-						new StringReference(),
+						new StringReferenceValue(),
 					});
 				}
 			}

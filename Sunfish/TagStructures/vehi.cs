@@ -12,7 +12,7 @@ namespace Sunfish.TagStructures
             List<Value> values = new List<Value>(new unit().Values);
             values.AddRange(new Value[]{
                 new Data(48),
-                new StringReference(),
+                new StringReferenceValue(),
                 new Data(72),
                 new TagBlockArray(typeof(TagBlock0_0)),
                 new Data(20),
@@ -43,9 +43,9 @@ namespace Sunfish.TagStructures
             {
                 Values = InitializeValues(new Value[]
 				{
-                    new StringReference(),
+                    new StringReferenceValue(),
                     new Data(48),
-                    new StringReference(),
+                    new StringReferenceValue(),
 				});
             }
         }
@@ -57,9 +57,9 @@ namespace Sunfish.TagStructures
             {
                 Values = InitializeValues(new Value[]
 				{
-                    new StringReference(),
+                    new StringReferenceValue(),
                     new Data(56),
-                    new StringReference(),
+                    new StringReferenceValue(),
 				});
             }
         }

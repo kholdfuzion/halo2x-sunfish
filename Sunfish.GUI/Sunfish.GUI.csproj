@@ -95,6 +95,7 @@
     <Compile Include="ModelEditor.Designer.cs">
       <DependentUpon>ModelEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="SaveTagDialog.cs" />
     <Compile Include="SolutionExplorer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,6 +144,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="SunfishDocument.cs">
+      <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>

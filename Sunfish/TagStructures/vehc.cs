@@ -22,7 +22,7 @@ namespace Sunfish.TagStructures
 				{
 					new Data(4),
 					new TagReference(),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
