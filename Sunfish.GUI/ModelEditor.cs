@@ -14,7 +14,7 @@ using System.Windows.Forms;
 
 namespace Sunfish.GUI
 {
-    public partial class ModelEditor : SunfishDocument
+    public partial class ModelEditor : SunfishEditor
     {
         Game1 game;
         Sunfish.Mode.Model m;

@@ -19,7 +19,7 @@ namespace Sunfish.GUI
         OpenFileDialog openProjectDialog;
         SaveFileDialog saveTagDialog;
 
-        SolutionExplorer f;
+        SolutionExplorer Explorer;
 
         Dictionary<string, int> saveFilters;
 
@@ -28,9 +28,17 @@ namespace Sunfish.GUI
             Properties.Settings.Default.ProjectsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sunfish 2011\\Projects");
             if(!Directory.Exists(Properties.Settings.Default.ProjectsDirectory))
                 Directory.CreateDirectory(Properties.Settings.Default.ProjectsDirectory);
+
             InitializeComponent();
+
+            LoadDefaultWorkspace(); 
+
+            #region Status Handler
+
             Globals.StatusChangeHandler s = new Globals.StatusChangeHandler(Status);
             Globals.StatusChanged += s;
+
+            #endregion
 
             #region Dialogs Initialization
 
@@ -54,26 +62,32 @@ namespace Sunfish.GUI
 
             #endregion
 
-
-            f = new SolutionExplorer();
-            f.treeView1.DoubleClick += new EventHandler(treeView1_DoubleClick);
-            f.Text = "Solution Explorer";
-            f.Show(this.dockPanel1,  WeifenLuo.WinFormsUI.Docking.DockState.DockRight);
-            this.dockPanel1.ActiveDocumentChanged += new EventHandler(dockPanel1_ActiveDocumentChanged);
-
+            #region auto load
+#if DEBUG
             project = Project.Load(@"E:\Users\root\Documents\Sunfish 2011\Projects\frebuild\frebuild.h2proj");
             LoadProject();
+#endif
+            #endregion
+        }
+
+        private void LoadDefaultWorkspace()
+        {
+            Explorer = new SolutionExplorer();
+            Explorer.treeView1.DoubleClick += new EventHandler(treeView1_DoubleClick);
+            Explorer.Text = "Solution Explorer";
+            PrimaryDock.ActiveDocumentChanged += new EventHandler(dockPanel1_ActiveDocumentChanged);
+            Explorer.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.DockRight);
         }
 
         void dockPanel1_ActiveDocumentChanged(object sender, EventArgs e)
         {
             if (Disposing) { return; }
-            foreach (IDockContent content in dockPanel1.Documents)
+            foreach (IDockContent content in PrimaryDock.Documents)
             {
-                if (content == dockPanel1.ActiveDocument) { content.OnActivated(null); }
+                if (content == PrimaryDock.ActiveDocument) { content.OnActivated(null); }
                 else content.OnDeactivate(null);
             }
-            if (dockPanel1.ActiveDocument is SunfishDocument) TagSaveOptions(true);
+            if (PrimaryDock.ActiveDocument is SunfishEditor) TagSaveOptions(true);
             else TagSaveOptions(false);
         }
 
@@ -85,14 +99,14 @@ namespace Sunfish.GUI
 
         void treeView1_DoubleClick(object sender, EventArgs e)
         {
-            if (f.treeView1.SelectedNode == null) return;
-            else if (f.treeView1.SelectedNode is ClassTreeNode)
-                LoadTag(f.treeView1.SelectedNode as ClassTreeNode);
+            if (Explorer.treeView1.SelectedNode == null) return;
+            else if (Explorer.treeView1.SelectedNode is ClassTreeNode)
+                LoadTag(Explorer.treeView1.SelectedNode as ClassTreeNode);
         }
 
         private void LoadTag(ClassTreeNode node)
         {
-            foreach (DockContent dc in this.dockPanel1.Documents)
+            foreach (DockContent dc in this.PrimaryDock.Documents)
                 if ((string)(dc.Tag) == node.Path)
                 {
                     dc.Activate();
@@ -103,22 +117,22 @@ namespace Sunfish.GUI
 
                 case "scnr":
                     MetaTool mt = new MetaTool();
-                    mt.Text = f.treeView1.SelectedNode.Text;
-                    mt.Show(this.dockPanel1, WeifenLuo.WinFormsUI.Docking.DockState.Document);
-                    Sunfish.Tag scnr = new Tag(Path.Combine(project.SourceDirectory, (f.treeView1.SelectedNode.Tag as TagInformation).Path));
+                    mt.Text = Explorer.treeView1.SelectedNode.Text;
+                    mt.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
+                    Sunfish.Tag scnr = new Tag(node.Path);
                     mt.LoadTag(scnr);
                     break;
 
                 case "bitm":
                     BitmapTool bt = new BitmapTool();
-                    bt.Text = f.treeView1.SelectedNode.Text;
-                    bt.Show(this.dockPanel1, WeifenLuo.WinFormsUI.Docking.DockState.Document);
+                    bt.Text = Explorer.treeView1.SelectedNode.Text;
+                    bt.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
                     break;
 
                 case "mode":
                     ModelEditor modeEdit = new ModelEditor();
-                    modeEdit.Text = f.treeView1.SelectedNode.Text;
-                    modeEdit.Show(this.dockPanel1, WeifenLuo.WinFormsUI.Docking.DockState.Document);
+                    modeEdit.Text = Explorer.treeView1.SelectedNode.Text;
+                    modeEdit.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
                     modeEdit.LoadTag(node.Path);
                     break;
             }
@@ -158,6 +172,7 @@ namespace Sunfish.GUI
             buildToolStripMenuItem.Visible = true;
             Directory.SetCurrentDirectory(project.SourceDirectory);
             fileSystemWatcher1.Path = project.SourceDirectory;
+            Explorer.LoadLayout(Path.Combine(project.RootDirectory, "user.settings"));
         }
 
         private void CloseProject()
@@ -165,9 +180,10 @@ namespace Sunfish.GUI
             if (project != null)
             {
                 project.Save();
+                Explorer.SaveLayout(Path.Combine(project.RootDirectory, "user.settings"));
                 project = null;
                 this.Text = "Sunfish 2011";
-                f.treeView1.Nodes.Clear();
+                Explorer.treeView1.Nodes.Clear();
                 projectToolStripMenuItem.Enabled = false;
                 projectToolStripMenuItem.Visible = false;
                 buildToolStripMenuItem.Enabled = false;
@@ -180,6 +196,7 @@ namespace Sunfish.GUI
         {
             if (openProjectDialog.ShowDialog() == DialogResult.OK)
             {
+                if (project != null) { CloseProject(); }
                 project = Project.Load(openProjectDialog.FileName);
                 LoadProject();
             }
@@ -191,21 +208,31 @@ namespace Sunfish.GUI
             {
                 List<string> filenames = new List<string>(Directory.GetFiles(project.SourceDirectory, String.Format("*{0}", Sunfish.Tag.Path.Extension), SearchOption.AllDirectories));
                 filenames.Sort();
-                f.treeView1.Nodes.Clear();
-                f.treeView1.Nodes.Add(String.Format("Solution \'{0}\'", project.Name));
-                f.treeView1.Nodes[0].Tag = project.SourceDirectory;
-                f.treeView1.BeginUpdate();
+                Explorer.treeView1.Nodes.Clear();
+                Explorer.treeView1.Nodes.Add(String.Format("Solution \'{0}\'", project.Name));
+                Explorer.treeView1.Nodes[0].Tag = project.SourceDirectory;
+                Explorer.treeView1.BeginUpdate();
                 foreach (string filename in filenames)
                 {
                     string relativeFilename = filename.Substring(project.SourceDirectory.Length);
                     string[] parts = relativeFilename.Split(new char[] { Path.DirectorySeparatorChar }); 
                     string parent = project.SourceDirectory;
-                    CreateNodes(f.treeView1.Nodes[0].Nodes, parts, 0, ref parent);
+                    CreateNodes(Explorer.treeView1.Nodes[0].Nodes, parts, 0, ref parent);
                 }
-                f.treeView1.Nodes[0].Expand();
-                f.treeView1.EndUpdate();
+                Explorer.treeView1.Nodes[0].Expand();
+                Explorer.treeView1.EndUpdate();
                 this.Text = project.Name + " - Sunfish 2011";
             }
+        }
+
+        private void UpdateSourceFiles(string filename)
+        {
+            Explorer.treeView1.BeginUpdate();
+            string relativeFilename = filename.Substring(project.SourceDirectory.Length);
+            string[] parts = relativeFilename.Split(new char[] { Path.DirectorySeparatorChar });
+            string parent = project.SourceDirectory;
+            CreateNodes(Explorer.treeView1.Nodes[0].Nodes, parts, 0, ref parent);
+            Explorer.treeView1.EndUpdate();
         }
 
         private void RefreshSourceFiles()
@@ -214,15 +241,15 @@ namespace Sunfish.GUI
             {
                 List<string> filenames = new List<string>(Directory.GetFiles(project.SourceDirectory, String.Format("*{0}", Sunfish.Tag.Path.Extension), SearchOption.AllDirectories));
                 filenames.Sort();
-                f.treeView1.BeginUpdate();
+                Explorer.treeView1.BeginUpdate();
                 foreach (string filename in filenames)
                 {
                     string relativeFilename = filename.Substring(project.SourceDirectory.Length);
                     string[] parts = relativeFilename.Split(new char[] { Path.DirectorySeparatorChar });
                     string parent = project.SourceDirectory;
-                    CreateNodes(f.treeView1.Nodes[0].Nodes, parts, 0, ref parent);
+                    CreateNodes(Explorer.treeView1.Nodes[0].Nodes, parts, 0, ref parent);
                 }
-                f.treeView1.EndUpdate();
+                Explorer.treeView1.EndUpdate();
             }
         }
 
@@ -267,15 +294,15 @@ namespace Sunfish.GUI
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (this.dockPanel1.ActiveDocument is SunfishDocument)
-                (this.dockPanel1.ActiveDocument as SunfishDocument).Save();
+            if (this.PrimaryDock.ActiveDocument is SunfishEditor)
+                (this.PrimaryDock.ActiveDocument as SunfishEditor).Save();
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (this.dockPanel1.ActiveDocument is SunfishDocument)
+            if (this.PrimaryDock.ActiveDocument is SunfishEditor)
             {
-                SunfishDocument sunDoc = (this.dockPanel1.ActiveDocument as SunfishDocument);
+                SunfishEditor sunDoc = (this.PrimaryDock.ActiveDocument as SunfishEditor);
                 string tagname = sunDoc.HaloTag.Filename;
                 DirectoryInfo dir = Directory.GetParent(tagname);
                 saveTagDialog.InitialDirectory = dir.ToString();
@@ -288,8 +315,7 @@ namespace Sunfish.GUI
 
         private void fileSystemWatcher1_Created(object sender, FileSystemEventArgs e)
         {
-            project.ImportTag(e.FullPath);
-            RefreshSourceFiles();
+            UpdateSourceFiles(e.FullPath);
         }
 
         private void releaseToolStripMenuItem_Click(object sender, EventArgs e)
