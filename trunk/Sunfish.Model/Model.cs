@@ -98,7 +98,7 @@ namespace Sunfish.Mode
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
             tag.TagStream.Position = 0;
-            Name = tag.StringIdNames[br.ReadInt32()];
+            Name = tag.StringReferenceNames[br.ReadInt32()];
 
             #region Bounding Boxes
 
@@ -224,11 +224,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream); 
-            if (!tag.StringIdNames.Contains(Name))
+            if (!tag.StringReferenceNames.Contains(Name))
             {
-                tag.StringIdNames.Add(Name);
+                tag.StringReferenceNames.Add(Name);
             }
-            bw.Write(tag.StringIdNames.IndexOf(Name));
+            bw.Write(tag.StringReferenceNames.IndexOf(Name));
             return stream.GetBuffer();
         }
 
@@ -239,6 +239,25 @@ namespace Sunfish.Mode
             tag.Filename = Tag.Path.Create(Name, tag.Type);
             Sunfish.TagStructures.mode structure = new Sunfish.TagStructures.mode();
             structure.Data = this.Serialize(tag);
+
+            float minx, maxx, minz, maxz, miny, maxy;
+            minx = maxx = Sections[0].mesh.Vertices[0].X;
+            miny = maxy = Sections[0].mesh.Vertices[0].Y;
+            minz = maxz = Sections[0].mesh.Vertices[0].Z;
+            foreach (Vector3 v in Sections[0].mesh.Vertices)
+            {
+                if (v.X < minx) minx = v.X;
+                if (v.X > maxx) maxx = v.X;
+                if (v.Y < miny) miny = v.Y;
+                if (v.Y > maxy) maxy = v.Y;
+                if (v.Z < minz) minz = v.Z;
+                if (v.Z > maxz) maxz = v.Z;
+            }
+
+            BoundingBoxes[0].X = new Range(minx - 0.005f, maxx + 0.005f);
+            BoundingBoxes[0].Y = new Range(miny - 0.005f, maxy + 0.005f);
+            BoundingBoxes[0].Z = new Range(minz - 0.005f, maxz + 0.005f);
+
             foreach (BoundingBox boundingBox in this.BoundingBoxes)
             {
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("bounding box")] as TagBlockArray;
@@ -387,7 +406,7 @@ namespace Sunfish.Mode
         public Region(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            name = tag.StringIdNames[br.ReadInt32()];
+            name = tag.StringReferenceNames[br.ReadInt32()];
             nodemapoffset = br.ReadInt16();
             nodemapsize = br.ReadInt16();
 
@@ -427,11 +446,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringIdNames.Contains(name))
+            if (!tag.StringReferenceNames.Contains(name))
             {
-                tag.StringIdNames.Add(name);
+                tag.StringReferenceNames.Add(name);
             }
-            bw.Write(tag.StringIdNames.IndexOf(name));
+            bw.Write(tag.StringReferenceNames.IndexOf(name));
             bw.Write(nodemapoffset);
             bw.Write(nodemapsize);
             bw.Close();
@@ -449,7 +468,7 @@ namespace Sunfish.Mode
         public Permutation(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            name = tag.StringIdNames[br.ReadInt32()];
+            name = tag.StringReferenceNames[br.ReadInt32()];
             indices = new short[6];
             for (int i = 0; i < indices.Length; i++)
             {
@@ -479,11 +498,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringIdNames.Contains(name))
+            if (!tag.StringReferenceNames.Contains(name))
             {
-                tag.StringIdNames.Add(name);
+                tag.StringReferenceNames.Add(name);
             }
-            bw.Write(tag.StringIdNames.IndexOf(name));
+            bw.Write(tag.StringReferenceNames.IndexOf(name));
             for (int i = 0; i < indices.Length; i++)
             {
                 bw.Write(indices[i]);
@@ -541,7 +560,7 @@ namespace Sunfish.Mode
         public short VertexCount;
         public short TriangleCount;
 
-        public Mesh Mesh;
+        public Mesh mesh;
 
         public Compression CompressionFlags;
 
@@ -582,25 +601,28 @@ namespace Sunfish.Mode
                 }
             }
             if (Globals.IsExternalResource(RawOffset)) { return; }
-            tag.RawStream.Position = tag.RawInfos[RawOffset].Address;
-            Mesh = new Mesh(tag.RawStream, Resources, this, boundingBox);
+            tag.ResourceStream.Position = tag.ResourceInformation[RawOffset].Address;
+            mesh = new Mesh(tag.ResourceStream, Resources, this, boundingBox);
         }
 
         public byte[] Serialize(Tag tag, BoundingBox boundingBox)
         {
-            tag.AddRaw(Mesh.Serialize(this, boundingBox, out Resources));
-            RawOffset = tag.RawInfos.Length - 1;
+            RawOffset = tag.AddRaw(mesh.Serialize(this, boundingBox, out Resources));
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
+            VertexCount = (short)mesh.Vertices.Length;
+            TriangleCount = (short)(mesh.Indices.Length - 2);
+            VertexType = VertexType.Rigid;
+            CompressionFlags = Compression.Position | Compression.Texcoord;
             bw.Write((int)VertexType);
             bw.Write(VertexCount);
             bw.Write(TriangleCount);
             stream.Position = 26;
             bw.Write((int)CompressionFlags);
             stream.Position = 56;
-            bw.Write(RawOffset);
-            bw.Write(RawSize);
-            bw.Write(0);
+            bw.Write(RawOffset);//*
+            bw.Write(0);//*
+            bw.Write(RawHeaderSize);
             bw.Write(RawDataSize);
             if (!tag.TagReferences.Contains(tag.Filename))
             {
@@ -712,7 +734,7 @@ namespace Sunfish.Mode
         public Node(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            Name = tag.StringIdNames[br.ReadInt32()];
+            Name = tag.StringReferenceNames[br.ReadInt32()];
             ParentNodeIndex = br.ReadInt16();
             FirstChildNodeIndex = br.ReadInt16();
             FirstSiblingNodeIndex = br.ReadInt16();
@@ -731,11 +753,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringIdNames.Contains(Name))
+            if (!tag.StringReferenceNames.Contains(Name))
             {
-                tag.StringIdNames.Add(Name);
+                tag.StringReferenceNames.Add(Name);
             }
-            bw.Write(tag.StringIdNames.IndexOf(Name));
+            bw.Write(tag.StringReferenceNames.IndexOf(Name));
             bw.Write(ParentNodeIndex);
             bw.Write(FirstChildNodeIndex);
             bw.Write(FirstSiblingNodeIndex);
@@ -848,7 +870,7 @@ namespace Sunfish.Mode
         public MarkerGroup(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            Name = tag.StringIdNames[br.ReadInt32()];
+            Name = tag.StringReferenceNames[br.ReadInt32()];
             int Count = br.ReadInt32();
             if (Count > 0)
             {
@@ -866,11 +888,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringIdNames.Contains(Name))
+            if (!tag.StringReferenceNames.Contains(Name))
             {
-                tag.StringIdNames.Add(Name);
+                tag.StringReferenceNames.Add(Name);
             }
-            bw.Write(tag.StringIdNames.IndexOf(Name));
+            bw.Write(tag.StringReferenceNames.IndexOf(Name));
             bw.Close();
             return stream.GetBuffer();
         }

@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Runtime.InteropServices;
 using Sunfish.TagStructures;
+using Sunfish.ValueTypes;
 
 namespace Sunfish
 {
@@ -12,9 +13,9 @@ namespace Sunfish
     {
         public const string Extension = ".map";
 
-        public HeaderStruct Header;
-        public TagIndex Index;
-        public UnicodeTable EnglishUnicode;
+        public Header Header;
+        public Index Index;
+        public Dictionary<UnicodeTable.Language, UnicodeTable> Unicode;
         public Stream BaseStream;
         public string[] Tagnames;
         public List<string> StringIdNames;
@@ -24,9 +25,9 @@ namespace Sunfish
 
         public Map()
         {
-            Header = HeaderStruct.Default;
-            Index = new TagIndex();
-            EnglishUnicode = new UnicodeTable();
+            Header = new Header();
+            Index = new Index();
+            Unicode = new Dictionary<UnicodeTable.Language, UnicodeTable>();
             Tagnames = new string[0];
             StringIdNames = new List<string>();
         }
@@ -36,10 +37,10 @@ namespace Sunfish
             BaseStream = stream;
             BaseStream.Position = 0;
             BinaryReader br = new BinaryReader(BaseStream);
-            Header = HeaderStruct.RawDeserialize(br.ReadBytes(Marshal.SizeOf(typeof(HeaderStruct))), 0);
-            Index = new TagIndex(BaseStream, Header.IndexAddress);
+            Header = new Header(this);
+            Index = new Index(this);
             SecondaryMagic = Index.TagEntries[0].VirtualAddress - (Header.IndexAddress + Header.IndexLength);
-            Goto(Index.ScenarioTagId);
+            Seek(Index.ScenarioTagId);
             BaseStream.Position += 528;
             int Count = br.ReadInt32();
             int Address = br.ReadInt32();
@@ -52,34 +53,44 @@ namespace Sunfish
                 if (i == 0)
                     PrimaryMagic = (int)(virtualOffset - blockOffset);
                 BaseStream.Position += 8;
-                int sbspId = br.ReadInt32();
+                Sunfish.ValueTypes.TagIndex sbspId = br.ReadInt32();
                 BaseStream.Position += 4;
-                int ltmpId = br.ReadInt32();
+                Sunfish.ValueTypes.TagIndex ltmpId = br.ReadInt32();
                 BaseStream.Position = blockOffset + 8;
                 int ltmpOffset = br.ReadInt32();
                 int ltmpSize = (int)((blockOffset + blockSize) - (ltmpOffset - PrimaryMagic));
-                Map.TagIndex.TagInfo tagEntry = Index.TagEntries[sbspId & 0x0000FFFF];
+                Index.TagInformation tagEntry = Index.TagEntries[sbspId.Index];
                 tagEntry.VirtualAddress = virtualOffset;
                 tagEntry.Length = blockSize - ltmpSize;
+                tagEntry.Magic = PrimaryMagic;
                 Index.TagEntries[sbspId & 0x0000FFFF] = tagEntry;
-                tagEntry = Index.TagEntries[ltmpId & 0x0000FFFF];
+                if (ltmpId == -1) { continue; }
+                tagEntry = Index.TagEntries[ltmpId.Index];
                 tagEntry.VirtualAddress = ltmpOffset;
                 tagEntry.Length = ltmpSize;
-                Index.TagEntries[ltmpId & 0x0000FFFF] = tagEntry;
+                tagEntry.Magic = PrimaryMagic;
+                Index.TagEntries[ltmpId.Index] = tagEntry;
             }
-            BaseStream.Position = Header.FilenameTableAddress;
-            Tagnames = Encoding.UTF8.GetString(br.ReadBytes(Header.FilenameTableLength - 1)).Split(char.MinValue);
-            BaseStream.Position = Header.StringIdTableAddress;
-            StringIdNames = new List<string>(Encoding.UTF8.GetString(br.ReadBytes(Header.StringIdTableLength - 1)).Split(char.MinValue));
-            EnglishUnicode = new UnicodeTable(this);
+            BaseStream.Position = Header.PathTableAddress;
+            Tagnames = Encoding.UTF8.GetString(br.ReadBytes(Header.PathTableLength - 1)).Split(char.MinValue);
+            BaseStream.Position = Header.StringTableAddress;
+            StringIdNames = new List<string>(Encoding.UTF8.GetString(br.ReadBytes(Header.StringTableLength - 1)).Split(char.MinValue));
+            Unicode = new Dictionary<UnicodeTable.Language, UnicodeTable>(8);
+            Unicode.Add(UnicodeTable.Language.English, new UnicodeTable(this, UnicodeTable.Language.English));
+            Unicode.Add(UnicodeTable.Language.Japanese, new UnicodeTable(this, UnicodeTable.Language.Japanese));
+            Unicode.Add(UnicodeTable.Language.Chinese, new UnicodeTable(this, UnicodeTable.Language.Chinese));
+            Unicode.Add(UnicodeTable.Language.Dutch, new UnicodeTable(this, UnicodeTable.Language.Dutch));
+            Unicode.Add(UnicodeTable.Language.French, new UnicodeTable(this, UnicodeTable.Language.French));
+            Unicode.Add(UnicodeTable.Language.Spanish, new UnicodeTable(this, UnicodeTable.Language.Spanish));
+            Unicode.Add(UnicodeTable.Language.Italian, new UnicodeTable(this, UnicodeTable.Language.Italian));
+            Unicode.Add(UnicodeTable.Language.Korean, new UnicodeTable(this, UnicodeTable.Language.Korean));
+            Unicode.Add(UnicodeTable.Language.Portuguese, new UnicodeTable(this, UnicodeTable.Language.Portuguese));
         }
 
-        public void Goto(int tagIndex)
+        public void Seek(int tagIndex)
         {
             int index = tagIndex & 0x0000FFFF;
-            if (Index.TagEntries[index].Type == "sbsp" || Index.TagEntries[index].Type == "ltmp")
-                BaseStream.Position = Index.TagEntries[index].VirtualAddress - PrimaryMagic;
-            else BaseStream.Position = Index.TagEntries[index].VirtualAddress - SecondaryMagic;
+            BaseStream.Seek(Index.TagEntries[index].VirtualAddress - Index.TagEntries[index].Magic, SeekOrigin.Begin);
         }
 
         public int IndexOfTagEntry(string type, string tagname)
@@ -87,36 +98,38 @@ namespace Sunfish
             for (int i = 0; i < Index.TagEntries.Length; i++)
                 if (Index.TagEntries[i].Type == type && Tagnames[i] == tagname) return i;
             return -1;
+        }       
+    }
+    public class Index
+    {
+        const int HeaderSize = 32;
+
+        public const int VirtualOffset = -2147086336;
+
+        public int TagTypeArrayVirtualAddress;
+        public int TagTypeCount;
+        public int TagInfoArrayVirtualAddress;
+        public int ScenarioTagId;
+        public int GlobalsTagId;
+        public int TagInfoCount;
+        readonly byte[] FourCC;
+
+        public static TagType[] Types;
+        public TagInformation[] TagEntries;
+
+        public int Length
+        {
+            get
+            {
+                int indexSize = 32 + (TagTypeCount * 12) + (TagInfoCount * 16);
+                int padding = Padding.GetCount(indexSize, 512);
+                return indexSize + padding;
+            }
         }
 
-        public class TagIndex
+        static Index()
         {
-            const int HeaderSize = 32;
-
-            public int TagTypeArrayVirtualAddress;
-            public int TagTypeCount;
-            public int TagInfoArrayVirtualAddress;
-            public int ScenarioTagId;
-            public int GlobalsTagId;
-            public int TagInfoCount;
-            readonly byte[] FourCC;
-
-            public static string[] Types;
-            public TagInfo[] TagEntries;
-
-            public int Length
-            {
-                get
-                {
-                    int indexSize = 32 + (TagTypeCount * 12) + (TagInfoCount * 16);
-                    int padding = Padding.GetCount(indexSize, 512);
-                    return indexSize + padding;
-                }
-            }
-
-            static TagIndex()
-            {
-                Types = new string[] {                 
+            Types = new TagType[] {                 
                     "$#!+",
                     "*cen","*eap","*ehi","*igh","*ipd","*qip","*rea","*sce",
                     "/**/",
@@ -147,351 +160,326 @@ namespace Sunfish
                     "vehc","vehi","vrtx",
                     "weap","weat","wgit","wgtz","whip","wigl","wind","wphi",
                 };
-                TagTypesDictionary = new Dictionary<string, string>(118);
-                for (int i = 0; i < Map.TagIndex.Types.Length; i++)
-                    TagTypesDictionary.Add(GetCleanType(Map.TagIndex.Types[i]), Map.TagIndex.Types[i]);
-            }
+            TagTypesDictionary = new Dictionary<string, string>(118);
+            for (int i = 0; i < Index.Types.Length; i++)
+                TagTypesDictionary.Add(GetCleanType(Index.Types[i].ToString()), Index.Types[i].ToString());
+        }
 
-            public static string GetCleanType(string dirtyType)
+        public static string GetCleanType(string dirtyType)
+        {
+            string cleanType = dirtyType.Replace('*', ' ');
+            cleanType = cleanType.Replace('!', ' ');
+            cleanType = cleanType.Replace('+', ' ');
+            cleanType = cleanType.Replace('<', ' ');
+            cleanType = cleanType.Replace('>', ' ');
+            cleanType = cleanType.Replace('$', ' ');
+            cleanType = cleanType.Replace('#', ' ');
+            return cleanType.Trim();
+        }
+
+        public static string GetDirtyType(string cleanType)
+        {
+            return TagTypesDictionary[cleanType];
+        }
+
+        static Dictionary<string, string> TagTypesDictionary;
+
+        public Index()
+        {
+            FourCC = Encoding.UTF8.GetBytes("sgat");
+            TagTypeCount = Types.Length;
+        }
+
+        public Index(Map map)
+        {
+            BinaryReader br = new BinaryReader(map.BaseStream);
+            map.BaseStream.Seek(map.Header.IndexAddress, SeekOrigin.Begin);
+            this.TagTypeArrayVirtualAddress = br.ReadInt32();
+            this.TagTypeCount = br.ReadInt32();
+            this.TagInfoArrayVirtualAddress = br.ReadInt32();
+            this.ScenarioTagId = br.ReadInt32();
+            this.GlobalsTagId = br.ReadInt32();
+            map.BaseStream.Seek(4, SeekOrigin.Current);
+            this.TagInfoCount = br.ReadInt32();
+            if (br.ReadTagType() != "tags") throw new Exception();
+            for (int i = 0; i < TagTypeCount; i++)
             {
-                string cleanType = dirtyType.Replace('*', ' ');
-                cleanType = cleanType.Replace('!', ' ');
-                cleanType = cleanType.Replace('+', ' ');
-                cleanType = cleanType.Replace('<', ' ');
-                cleanType = cleanType.Replace('>', ' ');
-                cleanType = cleanType.Replace('$', ' ');
-                cleanType = cleanType.Replace('#', ' ');
-                return cleanType.Trim();
+                if (Types[i] != br.ReadTagType()) throw new Exception("InvalidTagType");
+                map.BaseStream.Seek(8, SeekOrigin.Current);
             }
-
-            public static string GetDirtyType(string cleanType)
+            TagEntries = new TagInformation[TagInfoCount];
+            for (int i = 0; i < TagInfoCount; i++)
             {
-                return TagTypesDictionary[cleanType];
+                TagEntries[i] = new TagInformation() { Type = br.ReadTagType(), Index = br.ReadTagIndex(), VirtualAddress = br.ReadInt32(), Length = br.ReadInt32() };
+                TagEntries[i].Magic = TagEntries[0].VirtualAddress - (map.Header.IndexAddress + map.Header.IndexLength);
             }
+        }
 
-            static Dictionary<string, string> TagTypesDictionary;
+        public class TagInformation
+        {
+            public TagType Type;
+            public TagIndex Index;
+            public int VirtualAddress;
+            public int Length;
 
-            public TagIndex()
+            public int Magic;
+
+            public byte[] ToByteArray()
             {
-                FourCC = Encoding.UTF8.GetBytes("sgat");
-                TagTypeCount = Types.Length;
+                byte[] buffer = new byte[16];
+                Array.Copy(Type.ToByteArray(), 0, buffer, 0, 4);
+                Array.Copy(BitConverter.GetBytes(Index), 0, buffer, 4, 4);
+                Array.Copy(BitConverter.GetBytes(VirtualAddress), 0, buffer, 8, 4);
+                Array.Copy(BitConverter.GetBytes(Length), 0, buffer, 12, 4);
+                return buffer;
             }
+        }
 
-            public TagIndex(Stream stream, int offset)
+        public byte[] ToArray()
+        {
+            byte[] buffer = new byte[this.Length];
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(TagTypeArrayVirtualAddress);
+            bw.Write(TagTypeCount);
+            bw.Write(TagInfoArrayVirtualAddress);
+            bw.Write(ScenarioTagId);
+            bw.Write(GlobalsTagId);
+            bw.Write(0x00000000);
+            bw.Write(TagInfoCount);
+            bw.Write(FourCC, 0, 4);
+
+            TagType baseType;
+            foreach (TagType type in Types)
             {
-                stream.Position = offset;
-                BinaryReader br = new BinaryReader(stream);
-                TagTypeArrayVirtualAddress = br.ReadInt32();
-                TagTypeCount = br.ReadInt32();
-                TagInfoArrayVirtualAddress = br.ReadInt32();
-                ScenarioTagId = br.ReadInt32();
-                GlobalsTagId = br.ReadInt32();
-                br.ReadInt32();
-                TagInfoCount = br.ReadInt32();
-                FourCC = br.ReadBytes(4);
-                byte[] buffer = br.ReadBytes(TagTypeCount * 12);
-                Types = new string[TagTypeCount];
-                for (int i = 0; i < TagTypeCount; i++)
-                    Types[i] = Globals.ReverseString(Encoding.UTF8.GetString(buffer, i * 12, 4));
-                buffer = br.ReadBytes(TagInfoCount * 16);
-                TagEntries = new TagInfo[TagInfoCount];
-                for (int i = 0; i < TagInfoCount; i++)
-                    TagEntries[i] = new TagInfo(buffer, i * 16);
-            }
-
-            public struct TagType
-            {
-                public readonly string Name;
-                public readonly string BaseType0;
-                public readonly string BaseType1;
-
-                public TagType(byte[] rawData, int offset)
+                bw.Write(type.ToByteArray());
+                baseType = GetBaseType(type);
+                if (baseType == TagType.Null)
                 {
-                    Name = Globals.ReverseString(Encoding.UTF8.GetString(rawData, offset, 4));
-                    BaseType0 = Globals.ReverseString(Encoding.UTF8.GetString(rawData, offset + 4, 4));
-                    BaseType1 = Globals.ReverseString(Encoding.UTF8.GetString(rawData, offset + 8, 4));
+                    bw.Write(0);
+                    bw.Write(0);
                 }
-            }
-
-            public struct TagInfo
-            {
-                public string Type;
-                public int Id;
-                public int VirtualAddress;
-                public int Length;
-
-                public TagInfo(byte[] rawData, int position)
+                else
                 {
-                    Type = Globals.ReverseString(Encoding.UTF8.GetString(rawData, position, 4));
-                    Id = BitConverter.ToInt32(rawData, position + 4);
-                    VirtualAddress = BitConverter.ToInt32(rawData, position + 8);
-                    Length = BitConverter.ToInt32(rawData, position + 12);
-                }
-
-                public byte[] ToArray()
-                {
-                    byte[] buffer = new byte[16];
-                    MemoryStream ms = new MemoryStream(buffer);
-                    BinaryWriter br = new BinaryWriter(ms);
-                    byte[] typeBytes = Encoding.UTF8.GetBytes(Type);
-                    Array.Reverse(typeBytes);
-                    br.Write(typeBytes, 0, 4);
-                    br.Write(Id);
-                    br.Write(VirtualAddress);
-                    br.Write(Length);
-                    br.Close();
-                    return buffer;
-                }
-            }
-
-            public byte[] ToArray()
-            {
-                byte[] buffer = new byte[this.Length];
-                MemoryStream ms = new MemoryStream(buffer);
-                BinaryWriter bw = new BinaryWriter(ms);
-
-                bw.Write(TagTypeArrayVirtualAddress);
-                bw.Write(TagTypeCount);
-                bw.Write(TagInfoArrayVirtualAddress);
-                bw.Write(ScenarioTagId);
-                bw.Write(GlobalsTagId);
-                bw.Write(0x00000000);
-                bw.Write(TagInfoCount);
-                bw.Write(FourCC, 0, 4);
-
-                string baseType;
-                byte[] zero = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-                byte[] typeBuffer;
-                foreach (string type in Types)
-                {
-                    typeBuffer = Encoding.UTF8.GetBytes(type);
-                    Array.Reverse(typeBuffer);
-                    bw.Write(typeBuffer, 0, 4);
-                    baseType = GetBaseType(type);
-                    if (baseType == null)
+                    bw.Write(baseType.ToByteArray());
+                    baseType = GetBaseType(baseType);
+                    if (baseType == TagType.Null)
                     {
-                        bw.Write(zero);
-                        bw.Write(zero);
+                        bw.Write(0);
                     }
                     else
                     {
-                        typeBuffer = Encoding.UTF8.GetBytes(baseType);
-                        Array.Reverse(typeBuffer);
-                        bw.Write(typeBuffer, 0, 4);
-                        baseType = GetBaseType(baseType);
-                        if (baseType == null)
-                        {
-                            bw.Write(zero);
-                        }
-                        else
-                        {
-                            typeBuffer = Encoding.UTF8.GetBytes(baseType);
-                            Array.Reverse(typeBuffer);
-                            bw.Write(typeBuffer, 0, 4);
-                        }
+                        bw.Write(baseType.ToByteArray());
                     }
                 }
-
-                foreach (TagInfo entry in TagEntries)
-                    bw.Write(entry.ToArray());
-                bw.Close();
-                return buffer;
             }
 
-            public string GetBaseType(string type)
+            foreach (TagInformation entry in TagEntries)
+                bw.Write(entry.ToByteArray());
+            bw.Close();
+            return buffer;
+        }
+
+        TagType GetBaseType(TagType type)
+        {
+            switch (type.ToString())
             {
-                switch (type)
-                {
-                    case "item":
-                    case "unit":
-                    case "ssce":
-                    case "devi":
-                    case "scen":
-                    case "proj":
-                    case "crea":
-                    case "bloc":
-                        return "obje";
-                    case "weap":
-                    case "garb":
-                    case "eqip":
-                        return "item";
-                    case "vehi":
-                    case "bipd":
-                        return "unit";
-                    case "mach":
-                    case "lifi":
-                    case "ctrl":
-                        return "devi";
-                    default: return null;
-                }
+                case "item":
+                case "unit":
+                case "ssce":
+                case "devi":
+                case "scen":
+                case "proj":
+                case "crea":
+                case "bloc":
+                    return new TagType("obje");
+                case "weap":
+                case "garb":
+                case "eqip":
+                    return new TagType("item");
+                case "vehi":
+                case "bipd":
+                    return new TagType("unit");
+                case "mach":
+                case "lifi":
+                case "ctrl":
+                    return new TagType("devi");
+                default: return TagType.Null;
+            }
+        }
+    }
+
+    public class Header
+    {
+        const int Length = 2048;
+
+        public const int EngineVersion = 8;
+        public int IndexAddress = -1;
+        public int IndexLength;
+        public int TagCacheLength;
+        public int TotalCacheLength;
+        public const string BuildDate = "02.09.27.09809";
+        public MapType Type;
+        public int String128TableAddress = -1;
+        public int StringCount;
+        public int StringTableLength;
+        public int StringIndexAddress = -1;
+        public int StringTableAddress = -1;
+        public string Name;
+        public string Scenario;
+        public int PathCount;
+        public int PathTableAddress = -1;
+        public int PathTableLength;
+        public int PathIndexAddress = -1;
+        public uint Checksum;
+
+        public Header() { }
+
+        public Header(Stream stream)
+        {
+            BinaryReader br = new BinaryReader(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            if (br.ReadTagType() != "head") throw new InvalidDataException();
+            if (EngineVersion != br.ReadInt32()) throw new InvalidDataException();
+            stream.Seek(8, SeekOrigin.Current);
+            IndexAddress = br.ReadInt32();
+            IndexLength = br.ReadInt32();
+            TagCacheLength = br.ReadInt32();
+            TotalCacheLength = br.ReadInt32();
+            stream.Seek(256, SeekOrigin.Current);
+            if (BuildDate != Encoding.UTF8.GetString(br.ReadBytes(32)).TrimEnd(char.MinValue)) throw new InvalidDataException();
+            Type = (MapType)br.ReadInt32();
+            stream.Seek(28, SeekOrigin.Current);
+            String128TableAddress = br.ReadInt32();
+            StringCount = br.ReadInt32();
+            StringTableLength = br.ReadInt32();
+            StringIndexAddress = br.ReadInt32();
+            StringTableAddress = br.ReadInt32();
+            stream.Seek(36, SeekOrigin.Current);
+            Name = Encoding.UTF8.GetString(br.ReadBytes(36)).TrimEnd(char.MinValue);
+            Scenario = Encoding.UTF8.GetString(br.ReadBytes(256)).TrimEnd(char.MinValue);
+            stream.Seek(4, SeekOrigin.Current);
+            PathCount = br.ReadInt32();
+            PathTableAddress = br.ReadInt32();
+            PathTableLength = br.ReadInt32();
+            PathIndexAddress = br.ReadInt32();
+            Checksum = br.ReadUInt32();
+            stream.Seek(1320, SeekOrigin.Current);
+            if (br.ReadTagType() != "foot") throw new InvalidDataException();
+        }
+
+        public Header(Map map)
+            : this(map.BaseStream) { }
+
+        public byte[] ToByteArray()
+        {
+            MemoryStream stream = new MemoryStream(Header.Length);
+            BinaryWriter bw = new BinaryWriter(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            bw.Write(new TagType("head"));
+            bw.Write(EngineVersion);
+            stream.Seek(8, SeekOrigin.Current);
+            bw.Write(IndexAddress);
+            bw.Write(IndexLength);
+            bw.Write(TagCacheLength);
+            bw.Write(TotalCacheLength);
+            stream.Seek(256, SeekOrigin.Current);
+            bw.Write(Encoding.UTF8.GetBytes(BuildDate));
+            stream.Seek(32 - Encoding.UTF8.GetByteCount(BuildDate), SeekOrigin.Current);
+            bw.Write((int)Type);
+            stream.Seek(28, SeekOrigin.Current);
+            bw.Write(String128TableAddress);
+            bw.Write(StringCount);
+            bw.Write(StringTableLength);
+            bw.Write(StringIndexAddress);
+            bw.Write(StringTableAddress);
+            stream.Seek(36, SeekOrigin.Current);
+            if (Encoding.UTF8.GetByteCount(Name) > 36) throw new IndexOutOfRangeException();
+            bw.Write(Encoding.UTF8.GetBytes(Name));
+            stream.Seek(36 - Encoding.UTF8.GetByteCount(Name), SeekOrigin.Current);
+            if (Encoding.UTF8.GetByteCount(Scenario) > 256) throw new IndexOutOfRangeException();
+            bw.Write(Encoding.UTF8.GetBytes(Scenario));
+            stream.Seek(256 - Encoding.UTF8.GetByteCount(Scenario), SeekOrigin.Current);
+            stream.Seek(4, SeekOrigin.Current);
+            bw.Write(PathCount);
+            bw.Write(PathTableAddress);
+            bw.Write(PathTableLength);
+            bw.Write(PathIndexAddress);
+            bw.Write(Checksum);
+            stream.Seek(1320, SeekOrigin.Current);
+            bw.Write(new TagType("foot"));
+            return stream.ToArray();
+        }
+
+        public enum MapType : int
+        {
+            Campaign = 0,
+            Multiplayer = 1,
+            Mainmenu = 2,
+            Shared = 3,
+            Single_Player_Shared = 4,
+        }
+    }
+
+    public class UnicodeTable : List<UnicodeTable.Entry>
+    {
+        public UnicodeTable()
+            : base() { }
+
+        public UnicodeTable(Map map, Language language)
+            : base()
+        {
+            map.Seek(map.Index.GlobalsTagId);
+            map.BaseStream.Seek(400 + ((int)language * 28), SeekOrigin.Current);
+            BinaryReader br = new BinaryReader(map.BaseStream);
+            int count = br.ReadInt32();
+            int tableLength = br.ReadInt32();
+            int indexAddress = br.ReadInt32();
+            int tableAddress = br.ReadInt32();
+            this.Capacity = count;
+            StringId[] strRefs = new StringId[count];
+            int[] strOffsets = new int[count];
+            map.BaseStream.Seek(indexAddress, SeekOrigin.Begin);
+            for (int i = 0; i < count; i++)
+            {
+                strRefs[i] = br.ReadStringReference();
+                strOffsets[i] = br.ReadInt32();
+            }
+            for (int i = 0; i < count; i++)
+            {
+                map.BaseStream.Seek(tableAddress + strOffsets[i], SeekOrigin.Begin);
+#if DEBUG
+                if (map.BaseStream.Position >= tableAddress + tableLength) throw new Exception();
+#endif
+                StringBuilder unicodeString = new StringBuilder(byte.MaxValue);
+                while (br.PeekChar() != char.MinValue)
+                    unicodeString.Append(br.ReadChar());
+                this.Add(new Entry() { StringReference = strRefs[i], Value = unicodeString.ToString() });
             }
         }
 
-        [StructLayout(LayoutKind.Explicit, Size = 2048)]
-        public struct HeaderStruct
+        public enum Language
         {
-            public string Name { get { return Encoding.UTF8.GetString(name).Trim(char.MinValue); } }
-            public string Scenario { get { return Encoding.UTF8.GetString(scenario).Trim(char.MinValue); } }
-
-            [FieldOffset(0)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public byte[] HeaderFourCC;
-            [FieldOffset(4)]
-            public int EngineVersion;
-            [FieldOffset(8)]
-            public int Filesize;
-            [FieldOffset(16)]
-            public int IndexAddress;
-            [FieldOffset(20)]
-            public int IndexLength;
-            [FieldOffset(24)]
-            public int MetaTableSize;
-            [FieldOffset(28)]
-            public int TagDataSize;
-            [FieldOffset(288)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public byte[] BuildDate;
-            [FieldOffset(320)]
-            public int Type;
-            [FieldOffset(340)]
-            public int CrazyTableLength;
-            [FieldOffset(344)]
-            public int CrazyTableAddress;
-            [FieldOffset(352)]
-            public int StringId128TableAddress;
-            [FieldOffset(356)]
-            public int StringIdCount;
-            [FieldOffset(360)]
-            public int StringIdTableLength;
-            [FieldOffset(364)]
-            public int StringIdIndexAddress;
-            [FieldOffset(368)]
-            public int StringIdTableAddress;
-            [FieldOffset(408)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 36)]
-            byte[] name;
-            [FieldOffset(444)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
-            byte[] scenario;
-            [FieldOffset(704)]
-            public int TagCount;
-            [FieldOffset(708)]
-            public int FilenameTableAddress;
-            [FieldOffset(712)]
-            public int FilenameTableLength;
-            [FieldOffset(716)]
-            public int FilenameIndexOffset;
-            [FieldOffset(720)]
-            public uint Checksum;
-            [FieldOffset(2044)]
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public byte[] FooterFourCC;
-
-            public static HeaderStruct Default
-            { get { return new HeaderStruct(true); } }
-
-            private HeaderStruct(bool b)
-            {
-                HeaderFourCC = Encoding.UTF8.GetBytes("daeh");
-                EngineVersion = 8;
-                Filesize = 0;
-                IndexAddress = 0;
-                IndexLength = 0;
-                MetaTableSize = 0;
-                TagDataSize = 0;
-
-                BuildDate = new byte[36];
-                byte[] buildDate = Encoding.UTF8.GetBytes("02.09.27.09809");
-                for (int i = 0; i < buildDate.Length; i++)
-                    BuildDate[i] = buildDate[i];
-
-                Type = 1;
-                CrazyTableLength = 0;
-                CrazyTableAddress = 0;
-                StringId128TableAddress = 0;
-                StringIdCount = 0;
-                StringIdTableLength = 0;
-                StringIdIndexAddress = 0;
-                StringIdTableAddress = 0;
-                name = new byte[36];
-                scenario = new byte[256];
-                TagCount = 0;
-                FilenameTableAddress = 0;
-                FilenameTableLength = 0;
-                FilenameIndexOffset = 0;
-                Checksum = 0;
-                FooterFourCC = Encoding.UTF8.GetBytes("toof");
-            }
-
-            public static HeaderStruct RawDeserialize(byte[] rawData, int position)
-            {
-                int rawsize = Marshal.SizeOf(typeof(HeaderStruct));
-                if (rawsize > rawData.Length) throw new Exception();
-                IntPtr buffer = Marshal.AllocHGlobal(rawsize);
-                Marshal.Copy(rawData, position, buffer, rawsize);
-                HeaderStruct header = (HeaderStruct)Marshal.PtrToStructure(buffer, typeof(HeaderStruct));
-                Marshal.FreeHGlobal(buffer);
-                return header;
-            }
-
-            public static byte[] RawSerialize(HeaderStruct header)
-            {
-                int rawSize = Marshal.SizeOf(header);
-                IntPtr buffer = Marshal.AllocHGlobal(rawSize);
-                Marshal.StructureToPtr(header, buffer, false);
-                byte[] rawDatas = new byte[rawSize];
-                Marshal.Copy(buffer, rawDatas, 0, rawSize);
-                Marshal.FreeHGlobal(buffer);
-                return rawDatas;
-            }
+            English = 0,
+            Japanese = 1,
+            Dutch = 2,
+            French = 3,
+            Spanish = 4,
+            Italian = 5,
+            Korean = 6,
+            Chinese = 7,
+            Portuguese = 8,
         }
 
-        public class UnicodeTable
+        public class Entry
         {
-            public List<UnicodeEntry> Items;
+            public StringId StringReference;
+            public string Value;
 
-            public UnicodeTable()
+            public override string ToString()
             {
-                Items = new List<UnicodeEntry>();
-            }
-
-            public UnicodeTable(Map map)
-            {
-                map.Goto(map.Index.GlobalsTagId);
-                map.BaseStream.Position += 400;//English Location
-                BinaryReader br = new BinaryReader(map.BaseStream);
-                int stringCount = br.ReadInt32();
-                int tableSize = br.ReadInt32();
-                int indexOffset = br.ReadInt32();
-                int tableOffset = br.ReadInt32();
-                Items = new List<UnicodeEntry>(stringCount);
-                for (int i = 0; i < stringCount; i++)
-                {
-                    map.BaseStream.Position = indexOffset + (i * 8);
-                    int sid = br.ReadInt32();
-                    int strOffset = br.ReadInt32();
-                    map.BaseStream.Position = tableOffset + strOffset;
-                    string value = "";
-                    char c;
-                    while (true)
-                    {
-                        c = br.ReadChar();
-                        if (c == Char.MinValue) break;
-                        value += c;
-                    }
-                    Items.Add(new UnicodeEntry() { stringID = sid, unicodeString = value });
-                }
-            }
-
-            public class UnicodeEntry
-            {
-                public int stringID;
-                public string unicodeString;
-
-                public override string ToString()
-                {
-                    return unicodeString;
-                }
+                return Value;
             }
         }
     }

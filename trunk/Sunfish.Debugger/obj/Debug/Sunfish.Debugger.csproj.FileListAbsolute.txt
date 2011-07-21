@@ -1,0 +1,22 @@
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\ResolveAssemblyReference.cache
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.Form1.resources
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.Properties.Resources.resources
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.csproj.GenerateResource.Cache
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\bin\Debug\Sunfish.Debugger.exe
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\bin\Debug\Sunfish.Debugger.pdb
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\bin\Debug\Sunfish.dll
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\bin\Debug\Sunfish.pdb
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.exe
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish.Debugger\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish.Debugger\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\ResolveAssemblyReference.cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.Form1.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.Properties.Resources.resources
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\obj\Debug\Sunfish.Debugger.csproj.GenerateResource.Cache
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\bin\Debug\Sunfish.Debugger.exe
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\bin\Debug\Sunfish.Debugger.pdb
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\bin\Debug\Sunfish.dll
+E:\Users\root\Documents\Visual Studio 2008\Projects\Sunfish [working copy]\Sunfish.Debugger\bin\Debug\Sunfish.pdb

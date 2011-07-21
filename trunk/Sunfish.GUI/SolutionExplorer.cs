@@ -18,11 +18,16 @@ namespace Sunfish.GUI
         }
     }
 
-    public class FolderTreeNode : TreeNode
-    {
+    public class ResourceTreeNode : TreeNode {
+        public string Path;
     }
 
-    public class ClassTreeNode : TreeNode { }
+    public class FolderTreeNode : ResourceTreeNode
+    {
+
+    }
+
+    public class ClassTreeNode : ResourceTreeNode { }
 
     public class TagInformation
     {

@@ -1,0 +1,4 @@
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Release\ResolveAssemblyReference.cache
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Release\Sunfish.Debugger.Form1.resources
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Release\Sunfish.Debugger.Properties.Resources.resources
+E:\Users\root\AppData\Local\Temporary Projects\Sunfish.Debugger\obj\Release\Sunfish.Debugger.csproj.GenerateResource.Cache

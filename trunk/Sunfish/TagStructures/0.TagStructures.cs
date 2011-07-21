@@ -30,6 +30,7 @@ namespace Sunfish.TagStructures
                     val.SetDataReference(data);
             }
         }
+
         public Value[] Values;
 
         #region static members
@@ -370,9 +371,9 @@ namespace Sunfish.TagStructures
         #endregion
     }
 
-    public class StringReference : Value
+    public class StringReferenceValue : Value
     {
-        public StringReference()
+        public StringReferenceValue()
         { Size = 4; }
     }
 
@@ -578,7 +579,6 @@ namespace Sunfish.TagStructures
 
         #endregion
     }
-
 
     public class RawBlockAddress : Value
     {

@@ -20,7 +20,7 @@ namespace Sunfish.TagStructures
                 : base(56, 4)
             {
                 Values = InitializeValues(new Value[] {                     
-                    new StringReference(),
+                    new StringReferenceValue(),
                     new Data(20),
                     new TagBlockArray(typeof(TagBlock1_0)),
                     new TagBlockArray(typeof(TagBlock1_1)),
@@ -124,7 +124,7 @@ namespace Sunfish.TagStructures
                         public class TagBlock4_2 : TagBlock
                         {
                             public TagBlock4_2()
-                                : base(4, 4)
+                                : base(1, 4)
                             { }
                         }
 

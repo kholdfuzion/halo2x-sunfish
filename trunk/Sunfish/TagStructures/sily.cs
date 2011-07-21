@@ -13,9 +13,9 @@ namespace Sunfish.TagStructures
 			{
 				new Data(8),
 				new TagReference(),
-				new StringReference(),
-				new StringReference(),
-				new StringReference(),
+				new StringReferenceValue(),
+				new StringReferenceValue(),
+				new StringReferenceValue(),
 				new TagBlockArray(typeof(TagBlock0_0)),
 			});
 		}
@@ -26,7 +26,7 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new Data(8),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}

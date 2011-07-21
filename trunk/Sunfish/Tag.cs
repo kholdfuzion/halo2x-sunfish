@@ -8,6 +8,15 @@ using Sunfish.Developmental;
 
 namespace Sunfish
 {
+    public class CompilerTag:Tag
+    {
+        public CompilerTag(string filename)
+        :base(filename)
+        { }
+
+        public int ID;
+    }
+
     public class Tag
     {
         /// <summary>
@@ -38,26 +47,32 @@ namespace Sunfish
         /// <summary>
         /// Stream containing tag raw data(s)
         /// </summary>
-        public MemoryStream RawStream;
+        public MemoryStream ResourceStream;
         /// <summary>
         /// Array of RawInfos, use to get offset of raw in RawStream and raw length
         /// </summary>
-        public RawInfo[] RawInfos;
+        public ResourceInfo[] ResourceInformation;
         /// <summary>
         /// Array of stringId names
         /// </summary>
-        public List<string> StringIdNames = new List<string>();
+        public List<string> StringReferenceNames = new List<string>();
         /// <summary>
         /// Array of filenames, which are the tags this tag has references to
         /// </summary>
         public List<string> TagReferences = new List<string>();
 
+        public bool IsCached;
+        public int[] RawOffsets;
+        public int[] StringIdOffsets;
+        public int[] TagReferenceOffsets;
+        public int[] PointerOffsets;
+
         public Tag()
         {
             TagStream = new MemoryStream();
-            RawStream = new MemoryStream();
-            RawInfos = new RawInfo[0];
-            StringIdNames = new List<string>();
+            ResourceStream = new MemoryStream();
+            ResourceInformation = new ResourceInfo[0];
+            StringReferenceNames = new List<string>();
             TagReferences = new List<string>();
         }
 
@@ -75,19 +90,36 @@ namespace Sunfish
                 Info header = new Info(file);
                 Filename = filename;
                 Type = header.type;
+
+                file.Position = header.cacheInformationOffset;
+                IsCached = binReader.ReadBoolean();
+                file.Seek(3, SeekOrigin.Current);
+                RawOffsets = new int[binReader.ReadInt32()];
+                for (int i = 0; i < RawOffsets.Length; i++)
+                    RawOffsets[i] = binReader.ReadInt32();
+                StringIdOffsets = new int[binReader.ReadInt32()];
+                for (int i = 0; i < StringIdOffsets.Length; i++)
+                    StringIdOffsets[i] = binReader.ReadInt32();
+                TagReferenceOffsets = new int[binReader.ReadInt32()];
+                for (int i = 0; i < TagReferenceOffsets.Length; i++)
+                    TagReferenceOffsets[i] = binReader.ReadInt32();
+                PointerOffsets = new int[binReader.ReadInt32()];
+                for (int i = 0; i < PointerOffsets.Length; i++)
+                    PointerOffsets[i] = binReader.ReadInt32();
+
                 file.Position = header.metaOffset;
                 TagStream = new MemoryStream(binReader.ReadBytes(header.metaLength));
                 file.Position = header.rawOffset;
-                RawStream = new MemoryStream(binReader.ReadBytes(header.rawLength));
+                ResourceStream = new MemoryStream(binReader.ReadBytes(header.rawLength));
                 file.Position = header.rawReferencesOffset;
-                RawInfos = new RawInfo[header.rawReferencesCount];
-                for (int i = 0; i < RawInfos.Length; i++)
-                    RawInfos[i] = new RawInfo() { Address = binReader.ReadInt32(), Length = binReader.ReadInt32() };
-                StringIdNames = new List<string>(header.stringReferencesCount);
+                ResourceInformation = new ResourceInfo[header.rawReferencesCount];
+                for (int i = 0; i < ResourceInformation.Length; i++)
+                    ResourceInformation[i] = new ResourceInfo() { Address = binReader.ReadInt32(), Length = binReader.ReadInt32() };
+                StringReferenceNames = new List<string>(header.stringReferencesCount);
                 if (header.stringReferencesLength > 0)
                 {
                     file.Position = header.stringReferencesOffset;
-                    StringIdNames.AddRange(Encoding.UTF8.GetString(binReader.ReadBytes(header.stringReferencesLength)).Split('\0'));
+                    StringReferenceNames.AddRange(Encoding.UTF8.GetString(binReader.ReadBytes(header.stringReferencesLength)).Split('\0'));
                 }
                 TagReferences = new List<string>(header.idReferencesCount);
                 if (header.idReferencesLength > 0)
@@ -104,18 +136,19 @@ namespace Sunfish
         /// Adds new raw data to RawStream and creates new RawInfo entry
         /// </summary>
         /// <param name="data">raw data bytes</param>
-        public void AddRaw(byte[] data)
+        public int AddRaw(byte[] data)
         {
-            RawInfo newRawInfo = new RawInfo() { Address = (int)RawStream.Length, Length = data.Length };
-            byte[] buffer = RawStream.ToArray();
+            ResourceInfo newRawInfo = new ResourceInfo() { Address = (int)ResourceStream.Length, Length = data.Length };
+            byte[] buffer = ResourceStream.ToArray();
             MemoryStream memStream = new MemoryStream(buffer.Length + Padding.Pad(newRawInfo.Length));
             BinaryWriter binWriter = new BinaryWriter(memStream);
             binWriter.Write(buffer);
             binWriter.Write(data);
             binWriter.Write(Padding.GetBytes(memStream.Position));
-            Array.Resize<RawInfo>(ref RawInfos, RawInfos.Length + 1);
-            RawInfos[RawInfos.Length - 1] = newRawInfo;
-            RawStream = memStream;
+            Array.Resize<ResourceInfo>(ref ResourceInformation, ResourceInformation.Length + 1);
+            ResourceInformation[ResourceInformation.Length - 1] = newRawInfo;
+            ResourceStream = memStream;
+            return ResourceInformation.Length - 1;
         }
 
         /// <summary>
@@ -134,18 +167,18 @@ namespace Sunfish
         /// <param name="index">index of RawInfo</param>
         public void RemoveRaw(int index)
         {
-            RawInfo rawInfo = RawInfos[index];
-            byte[] buffer = RawStream.ToArray();
+            ResourceInfo rawInfo = ResourceInformation[index];
+            byte[] buffer = ResourceStream.ToArray();
             MemoryStream memStream = new MemoryStream();
             BinaryWriter binWriter = new BinaryWriter(memStream);
             binWriter.Write(buffer, 0, rawInfo.Address);
             int nextAddress = Padding.Pad(rawInfo.Address + rawInfo.Length);
             binWriter.Write(buffer, nextAddress, buffer.Length - nextAddress);
             ShiftRawOffsets(index, -Padding.Pad(rawInfo.Length));
-            List<RawInfo> rawInfos = new List<RawInfo>(RawInfos);
+            List<ResourceInfo> rawInfos = new List<ResourceInfo>(ResourceInformation);
             rawInfos.RemoveAt(index);
-            RawInfos = rawInfos.ToArray();
-            RawStream = memStream;
+            ResourceInformation = rawInfos.ToArray();
+            ResourceStream = memStream;
         }
         
         /// <summary>
@@ -160,8 +193,8 @@ namespace Sunfish
 
         private void AddRawAtIndex(int index, byte[] data, bool insert)
         {
-            RawInfo rawInfo = RawInfos[index];
-            byte[] buffer = RawStream.ToArray();
+            ResourceInfo rawInfo = ResourceInformation[index];
+            byte[] buffer = ResourceStream.ToArray();
             MemoryStream memStream = new MemoryStream();
             BinaryWriter binWriter = new BinaryWriter(memStream);
             binWriter.Write(buffer, 0, rawInfo.Address);
@@ -170,26 +203,26 @@ namespace Sunfish
             if (insert)
             {
                 binWriter.Write(buffer, rawInfo.Address, buffer.Length - rawInfo.Address);
-                List<RawInfo> rawInfos = new List<RawInfo>(RawInfos);
-                rawInfos.Insert(index, new RawInfo() { Address = rawInfo.Address, Length = data.Length });
-                RawInfos = rawInfos.ToArray();
-                ShiftRawOffsets(index + 1, Padding.Pad(RawInfos[index].Length));
+                List<ResourceInfo> rawInfos = new List<ResourceInfo>(ResourceInformation);
+                rawInfos.Insert(index, new ResourceInfo() { Address = rawInfo.Address, Length = data.Length });
+                ResourceInformation = rawInfos.ToArray();
+                ShiftRawOffsets(index + 1, Padding.Pad(ResourceInformation[index].Length));
             }
             else
             {
                 int nextAddress = (int)(rawInfo.Address + rawInfo.Length + Padding.GetCount(rawInfo.Address + rawInfo.Length, 512));
                 binWriter.Write(buffer, nextAddress, buffer.Length - nextAddress);
-                int shift = (int)((data.Length + Padding.GetCount(data.Length, 512)) - (RawInfos[index].Length + Padding.GetCount(RawInfos[index].Length, 512)));
-                RawInfos[index].Length = data.Length;
+                int shift = (int)((data.Length + Padding.GetCount(data.Length, 512)) - (ResourceInformation[index].Length + Padding.GetCount(ResourceInformation[index].Length, 512)));
+                ResourceInformation[index].Length = data.Length;
                 ShiftRawOffsets(index + 1, shift);
             }            
-            RawStream = memStream;
+            ResourceStream = memStream;
         }
 
         private void ShiftRawOffsets(int index, int shift)
         {
-            for (int i = index; i < RawInfos.Length; i++)
-                RawInfos[i].Address += shift;
+            for (int i = index; i < ResourceInformation.Length; i++)
+                ResourceInformation[i].Address += shift;
         }
 
         #endregion
@@ -216,39 +249,55 @@ namespace Sunfish
             header.type = this.Type;
 
             File.Position = Info.Size;
+            //header.cacheInformationOffset = (int)File.Position;
+            //binWriter.Write(IsCached);
+            //binWriter.Write(Padding.GetBytes(File.Position, 4));
+            //binWriter.Write(RawOffsets.Length);
+            //foreach (int i in RawOffsets)
+            //    binWriter.Write(i);
+            //binWriter.Write(StringIdOffsets.Length);
+            //foreach (int i in StringIdOffsets)
+            //    binWriter.Write(i);
+            //binWriter.Write(TagReferenceOffsets.Length);
+            //foreach (int i in TagReferenceOffsets)
+            //    binWriter.Write(i);
+            //binWriter.Write(PointerOffsets.Length);
+            //foreach (int i in PointerOffsets)
+            //    binWriter.Write(i);
+
             header.metaOffset = (int)File.Position;
             binWriter.Write(TagStream.ToArray());
             header.metaLength = (int)File.Position - header.metaOffset;
 
-            if (RawStream.Length > 0)
+            if (ResourceStream.Length > 0)
             {
                 binWriter.Write(Padding.GetBytes(File.Position, 512));
 
                 header.rawOffset = (int)File.Position;
-                binWriter.Write(RawStream.ToArray());
+                binWriter.Write(ResourceStream.ToArray());
                 header.rawLength = (int)File.Position - header.rawOffset;
 
-                header.rawReferencesCount = RawInfos.Length;
+                header.rawReferencesCount = ResourceInformation.Length;
                 header.rawReferencesOffset = (int)File.Position;
-                for (int i = 0; i < RawInfos.Length; i++)
+                for (int i = 0; i < ResourceInformation.Length; i++)
                 {
-                    binWriter.Write(RawInfos[i].Address);
-                    binWriter.Write(RawInfos[i].Length);
+                    binWriter.Write(ResourceInformation[i].Address);
+                    binWriter.Write(ResourceInformation[i].Length);
                 }
             }
 
-            if (StringIdNames.Count > 0)
+            if (StringReferenceNames.Count > 0)
             {
                 binWriter.Write(Padding.GetBytes(File.Position, 512));
 
-                header.stringReferencesCount = StringIdNames.Count;
+                header.stringReferencesCount = StringReferenceNames.Count;
                 header.stringReferencesOffset = (int)File.Position;
-                for (int i = 0; i < StringIdNames.Count; i++)
+                for (int i = 0; i < StringReferenceNames.Count; i++)
                 {
-                    binWriter.Write(Encoding.UTF8.GetBytes(StringIdNames[i]));
+                    binWriter.Write(Encoding.UTF8.GetBytes(StringReferenceNames[i]));
                     binWriter.Write(byte.MinValue);
                 }
-                if (StringIdNames.Count > 1)
+                if (StringReferenceNames.Count > 1)
                     File.Position -= 1;
                 header.stringReferencesLength = (int)File.Position - header.stringReferencesOffset;
             }
@@ -300,6 +349,7 @@ namespace Sunfish
             public int idReferencesCount;
             public int idReferencesOffset;
             public int idReferencesLength;
+            public int cacheInformationOffset;
 
             public Info(Stream stream)
             {
@@ -318,6 +368,7 @@ namespace Sunfish
                 idReferencesCount = binReader.ReadInt32();
                 idReferencesOffset = binReader.ReadInt32();
                 idReferencesLength = binReader.ReadInt32();
+                cacheInformationOffset = binReader.ReadInt32();
             }
 
             public byte[] ToByteArray()
@@ -338,6 +389,7 @@ namespace Sunfish
                 binWriter.Write(idReferencesCount);
                 binWriter.Write(idReferencesOffset);
                 binWriter.Write(idReferencesLength);
+                binWriter.Write(cacheInformationOffset);
                 binWriter.Flush();
                 return memStream.ToArray();
             }
@@ -350,7 +402,7 @@ namespace Sunfish
             private static string[] GetPathComponents(string tagpath)
             {
                 int index = tagpath.LastIndexOf("\\");
-                if (index == -1) { index = 0; }
+                if (index == -1) { index = 0; } else { index++; }
                 string[] parts = tagpath.Substring(index, tagpath.Length - index).Split(new char[] { '.' });
                 if (parts.Length != 3) throw new Exception();
                 if (parts[2] != Extension.Substring(1)) throw new Exception();
@@ -365,6 +417,14 @@ namespace Sunfish
             public static string GetTagName(string tagpath)
             {
                 return GetPathComponents(tagpath)[0];
+            }
+
+            public static string GetTagpath(string filepath)
+            {
+                string[] parts = filepath.Split(new char[] { '.' });
+                if (parts.Length != 3) throw new Exception();
+                if (parts[2] != Extension.Substring(1)) throw new Exception();
+                return parts[0];
             }
 
             public static string Create(string filename, string type)

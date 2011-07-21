@@ -11,9 +11,9 @@ namespace Sunfish.TagStructures
             : base("unic", 52)
         { }
 
-        public unic ExpandUnicode(unic unicodeTagblock, Map.UnicodeTable unicodeTable)
+        public unic ExpandUnicode(unic unicodeTagblock, UnicodeTable unicodeTable)
         {
-            List<Map.UnicodeTable.UnicodeEntry> entries = new List<Map.UnicodeTable.UnicodeEntry>();
+            List<UnicodeTable.Entry> entries = new List<UnicodeTable.Entry>();
             byte[] unicodeBytes = (unicodeTagblock.Values[1] as ByteArray).Data;
             TagBlockArray array  =(unicodeTagblock.Values[0] as TagBlockArray);
             for (int i = 0; i < array.Length; i++)
@@ -29,10 +29,10 @@ namespace Sunfish.TagStructures
                     index++;
                 }
                 string str = Encoding.UTF8.GetString(strBytes.ToArray());
-                entries.Add(new Map.UnicodeTable.UnicodeEntry() { stringID = sId, unicodeString = str, });
+                entries.Add(new UnicodeTable.Entry() { StringReference = sId, Value = str, });
             }
-            int start = unicodeTable.Items.Count;
-            unicodeTable.Items.AddRange(entries);
+            int start = unicodeTable.Count;
+            //unicodeTable.AddRange(entries);
             unic unic = new unic();
             unic.Data = new byte[unic.Size];
             MemoryStream ms = new MemoryStream(unic.Data);
@@ -43,7 +43,7 @@ namespace Sunfish.TagStructures
             return unic;
         }
 
-        public static unic CollapseUnicode(unic unicodeTagblock, Map.UnicodeTable dataSource)
+        public static unic CollapseUnicode(unic unicodeTagblock, UnicodeTable dataSource)
         {
             unic unic = new unic(true);
             TagBlockArray array = unic.Values[0] as TagBlockArray;
@@ -68,11 +68,11 @@ namespace Sunfish.TagStructures
                 {
                     BinaryWriter bw = new BinaryWriter(blockStream);
                     blockStream.Position = 0;
-                    bw.Write(dataSource.Items[offset + i].stringID);
+                    bw.Write(dataSource[offset + i].StringReference);
                     bw.Write(unicodeBytes.Count);
                 }
                 tagBlocks[i].Data = buffer;
-                unicodeBytes.AddRange(Encoding.UTF8.GetBytes(dataSource.Items[offset + i].unicodeString));
+                unicodeBytes.AddRange(Encoding.UTF8.GetBytes(dataSource[offset + i].Value));
                 unicodeBytes.Add((byte)0x00);
             }
             array.TagBlocks = tagBlocks;
@@ -96,7 +96,7 @@ namespace Sunfish.TagStructures
 			{
 				Values = InitializeValues(new Value[]
 				{
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(36),
 				});
 			}

@@ -12,7 +12,7 @@ namespace Sunfish.TagStructures
 			Values = InitializeValues(new Value[]
 			{
 				new Data(4),
-				new StringReference(),
+				new StringReferenceValue(),
 				new TagReference(),
 				new Data(60),
 				new TagBlockArray(typeof(TagBlock0_0)),

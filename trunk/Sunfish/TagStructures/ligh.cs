@@ -26,7 +26,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_0 : TagBlock
 		{
-			public TagBlock0_0() : base(76, 4)
+			public TagBlock0_0() : base(8, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{
@@ -36,7 +36,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_1 : TagBlock
 		{
-			public TagBlock0_1() : base(188, 4)
+			public TagBlock0_1() : base(8, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{

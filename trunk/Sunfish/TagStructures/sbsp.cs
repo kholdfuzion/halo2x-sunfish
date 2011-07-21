@@ -18,7 +18,7 @@ namespace Sunfish.TagStructures
 				new TagBlockArray(typeof(TagBlock0_2)),
 				new Data(24),
 				new TagBlockArray(typeof(TagBlock0_3)),
-				new ByteArray(),
+				new ByteArray(),//1
 				new TagBlockArray(typeof(TagBlock0_4)),
 				new TagBlockArray(typeof(TagBlock0_5)),
 				new Data(24),
@@ -34,7 +34,7 @@ namespace Sunfish.TagStructures
 				new Data(8),
 				new TagBlockArray(typeof(TagBlock0_15)),
 				new TagBlockArray(typeof(TagBlock0_16)),
-				new ByteArray(),
+				new ByteArray(),//2
 				new TagBlockArray(typeof(TagBlock0_17)),
 				new TagBlockArray(typeof(TagBlock0_18)),
 				new TagBlockArray(typeof(TagBlock0_19)),
@@ -48,9 +48,9 @@ namespace Sunfish.TagStructures
 				new Data(112),
 				new TagBlockArray(typeof(TagBlock0_26)),
 				new TagReference(),
-				new ByteArray(),
+				new ByteArray(16),//3
 				new Data(28),
-				new ByteArray(),
+				new ByteArray(),//4
 				new TagBlockArray(typeof(TagBlock0_27)),
 				new TagBlockArray(typeof(TagBlock0_28)),
 				new TagBlockArray(typeof(TagBlock0_29)),
@@ -96,7 +96,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_1 : TagBlock
 		{
-			public TagBlock0_1() : base(68, 4)
+			public TagBlock0_1() : base(64, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{
@@ -112,13 +112,13 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(8, 4)
+				public TagBlock1_0() : base(8, 8)
 				{
 				}
 			}
 			public class TagBlock1_1 : TagBlock
 			{
-				public TagBlock1_1() : base(16, 4)
+				public TagBlock1_1() : base(16, 16)
 				{
 				}
 			}
@@ -136,7 +136,7 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_4 : TagBlock
 			{
-				public TagBlock1_4() : base(16, 4)
+				public TagBlock1_4() : base(16, 16)
 				{
 				}
 			}
@@ -154,7 +154,7 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_7 : TagBlock
 			{
-				public TagBlock1_7() : base(16, 4)
+				public TagBlock1_7() : base(16, 16)
 				{
 				}
 			}
@@ -183,7 +183,7 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(16, 4)
+				public TagBlock1_0() : base(12, 4)
 				{
 				}
 			}
@@ -205,7 +205,7 @@ namespace Sunfish.TagStructures
 					new Data(36),
 					new TagReference(),
 					new Data(16),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -249,8 +249,8 @@ namespace Sunfish.TagStructures
 					new TagBlockArray(typeof(TagBlock1_2)),
 					new Data(4),
 					new TagBlockArray(typeof(TagBlock1_3)),
-					new Data(8),
-					new ByteArray(),
+					new TagBlockArray(typeof(TagBlock1_4)),
+					new ByteArray(16),
 				}, true);
 			}
 			public class TagBlock1_0 : TagBlock
@@ -275,13 +275,21 @@ namespace Sunfish.TagStructures
 				public TagBlock1_2() : base(2, 4)
 				{
 				}
-			}
-			public class TagBlock1_3 : TagBlock
-			{
-				public TagBlock1_3() : base(2, 4)
-				{
-				}
-			}
+            }
+            public class TagBlock1_3 : TagBlock
+            {
+                public TagBlock1_3()
+                    : base(2, 4)
+                {
+                }
+            }
+            public class TagBlock1_4 : TagBlock
+            {
+                public TagBlock1_4()
+                    : base(2, 4)
+                {
+                }
+            }
 		}
 		public class TagBlock0_10 : TagBlock
 		{
@@ -309,7 +317,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_12 : TagBlock
 		{
-			public TagBlock0_12() : base(24, 16)
+			public TagBlock0_12() : base(24, 4)
 			{
 			}
 		}
@@ -487,7 +495,7 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_17 : TagBlock
 		{
-			public TagBlock0_17() : base(60, 16)
+			public TagBlock0_17() : base(60, 4)
 			{
 			}
 		}
@@ -547,7 +555,7 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(40, 4)
+				public TagBlock1_0() : base(56, 4)
 				{
 				}
 			}
@@ -653,7 +661,7 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new Data(80),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -670,13 +678,13 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(4, 4)
+				public TagBlock1_0() : base(2, 4)
 				{
 				}
 			}
 			public class TagBlock1_1 : TagBlock
 			{
-				public TagBlock1_1() : base(4, 4)
+				public TagBlock1_1() : base(2, 4)
 				{
 				}
 			}
@@ -694,13 +702,13 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(4, 4)
+				public TagBlock1_0() : base(2, 4)
 				{
 				}
 			}
 			public class TagBlock1_1 : TagBlock
 			{
-				public TagBlock1_1() : base(4, 4)
+				public TagBlock1_1() : base(2, 4)
 				{
 				}
 			}
@@ -794,8 +802,8 @@ namespace Sunfish.TagStructures
 					{
 						new Data(32),
 						new TagBlockArray(typeof(TagBlock2_0)),
-						new Data(8),
 						new TagBlockArray(typeof(TagBlock2_1)),
+						new TagBlockArray(typeof(TagBlock2_2)),
 					});
 				}
 				public class TagBlock2_0 : TagBlock
@@ -803,13 +811,21 @@ namespace Sunfish.TagStructures
 					public TagBlock2_0() : base(32, 4)
 					{
 					}
-				}
-				public class TagBlock2_1 : TagBlock
-				{
-					public TagBlock2_1() : base(4, 4)
-					{
-					}
-				}
+                }
+                public class TagBlock2_1 : TagBlock
+                {
+                    public TagBlock2_1()
+                        : base(4, 4)
+                    {
+                    }
+                }
+                public class TagBlock2_2 : TagBlock
+                {
+                    public TagBlock2_2()
+                        : base(4, 4)
+                    {
+                    }
+                }
 			}
 		}
 		public class TagBlock0_27 : TagBlock
@@ -862,13 +878,13 @@ namespace Sunfish.TagStructures
 			}
 			public class TagBlock1_0 : TagBlock
 			{
-				public TagBlock1_0() : base(14, 4)
+				public TagBlock1_0() : base(12, 4)
 				{
 				}
 			}
 			public class TagBlock1_1 : TagBlock
 			{
-				public TagBlock1_1() : base(4, 4)
+				public TagBlock1_1() : base(2, 4)
 				{
 				}
 			}
@@ -908,13 +924,13 @@ namespace Sunfish.TagStructures
 		}
 		public class TagBlock0_31 : TagBlock
 		{
-			public TagBlock0_31() : base(92, 16)
+			public TagBlock0_31() : base(92, 4)
 			{
 			}
 		}
 		public class TagBlock0_32 : TagBlock
 		{
-			public TagBlock0_32() : base(48, 16)
+			public TagBlock0_32() : base(48, 4)
 			{
 				Values = InitializeValues(new Value[]
 				{

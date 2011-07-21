@@ -12,7 +12,7 @@ namespace Sunfish.TagStructures
             List<Value> values = new List<Value>(new devi().Values);
             values.AddRange(new Value[]{
                 new Data(8),
-                new StringReference(), 
+                new StringReferenceValue(), 
                 new TagReference(),
                 new TagReference(),
             });

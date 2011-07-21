@@ -12,7 +12,7 @@ namespace Sunfish.TagStructures
 			Values = new Value[]
 			{
 				new Data(48),
-				new StringReference(),
+				new StringReferenceValue(),
 				new TagReference(),
 				new TagReference(),
 				new TagReference(),
@@ -35,7 +35,7 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new Data(4),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -46,12 +46,12 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new Data(4),
-					new StringReference(),
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 					new Data(4),
 					new ByteArray(),
-					new StringReference(),
+					new StringReferenceValue(),
 				});
 			}
 		}
@@ -62,10 +62,10 @@ namespace Sunfish.TagStructures
 				Values = InitializeValues(new Value[]
 				{
 					new TagReference(),
-					new StringReference(),
+					new StringReferenceValue(),
 					new Data(4),
-					new StringReference(),
-					new StringReference(),
+					new StringReferenceValue(),
+					new StringReferenceValue(),
 				});
 			}
 		}

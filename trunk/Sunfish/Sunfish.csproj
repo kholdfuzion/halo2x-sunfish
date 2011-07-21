@@ -69,12 +69,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bran.cs" />
     <Compile Include="Buffering.cs" />
     <Compile Include="Decompiler.cs" />
     <Compile Include="Developmental\Benchmark.cs" />
     <Compile Include="Compiler.cs" />
+    <Compile Include="Developmental\Extensions.cs" />
     <Compile Include="Developmental\FasterDecompiler.cs" />
+    <Compile Include="Developmental\GlobalStringIDs.cs" />
     <Compile Include="Project.cs" />
+    <Compile Include="ProjectCompiler.cs" />
+    <Compile Include="ValueTypes.cs" />
     <Compile Include="TagStructures\0.TagStructures.cs" />
     <Compile Include="TagStructures\adlg.cs" />
     <Compile Include="TagStructures\ant.cs" />

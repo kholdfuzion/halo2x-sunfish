@@ -300,13 +300,22 @@ namespace Sunfish.Mode
             byte[] fourCC = Encoding.UTF8.GetBytes("crsr");
 
             bw.Write(Encoding.UTF8.GetBytes("hklb"), 0, 4);
-            bw.Write(new byte[116]);
-
+            stream.Seek(4, SeekOrigin.Current);
+            bw.Write(Groups.Length);
+            stream.Seek(4, SeekOrigin.Current);
+            bw.Write(1);
+            stream.Seek(20, SeekOrigin.Current);
+            bw.Write(Indices.Length);
+            stream.Seek(20, SeekOrigin.Current);
+            bw.Write(3);
+            stream.Seek(40, SeekOrigin.Current);
+            bw.Write(1);
+            stream.Seek(8, SeekOrigin.Current);
             bw.Write(fourCC, 0, 4);
             resourceList.Add(new Resource(ResourceType.MeshInformation, ResourceSubType.MeshInformationData, (int)(stream.Position - 120), 72));
             for (int i = 0; i < Groups.Length; i++)
             {
-                Groups[i].Serialize(stream);
+                Groups[i].Serialize(stream, boundingBox);
             }
 
             bw.Write(fourCC, 0, 4);
@@ -317,7 +326,7 @@ namespace Sunfish.Mode
             resourceList.Add(new Resource(ResourceType.TriangleStrip, ResourceSubType.IndiceStripData, (int)(stream.Position - 120), Indices.Length * 2));
             foreach (short i in Indices)
                 bw.Write(i);
-            bw.Write(Padding.GetBytes(stream.Position, 4));
+            stream.Pad(4);
 
             bw.Write(fourCC, 0, 4);
             resourceList.Add(new Resource(ResourceType.Unknown, ResourceSubType.UnknownData, (int)(stream.Position - 120), 96));
@@ -361,6 +370,9 @@ namespace Sunfish.Mode
             bw.Write(Padding.GetBytes(stream.Position, 4));
 
             bw.Write(Encoding.UTF8.GetBytes("fklb"), 0, 4);
+            int rawLength = (int)stream.Position;
+            stream.Seek(4, SeekOrigin.Begin);
+            bw.Write(rawLength - 116);
 
             resources = resourceList.ToArray();
             return stream.ToArray();
@@ -745,14 +757,27 @@ namespace Sunfish.Mode
         public short IndiceStart;
         public short IndiceCount;
 
-        public void Serialize(Stream stream)
+        public void Serialize(Stream stream, BoundingBox boundingbox)
         {
             BinaryWriter bw = new BinaryWriter(stream);
-            bw.Write(new byte[4]);
+            bw.Write((short)2);
+            bw.Write((short)3);
             bw.Write(ShaderIndex);
             bw.Write(IndiceStart);
             bw.Write(IndiceCount);
-            bw.Write(new byte[62]);
+            stream.Seek(4, SeekOrigin.Current);
+            bw.Write((short)1);
+            stream.Seek(16, SeekOrigin.Current);
+            bw.Write(1.0F);
+            bw.Write(0.0F);
+            bw.Write(0.0F);
+            bw.Write(1.0F);
+            bw.Write(boundingbox.X.Min);
+            bw.Write(boundingbox.X.Max);
+            bw.Write(boundingbox.Y.Min);
+            bw.Write(boundingbox.Y.Max);
+            bw.Write(boundingbox.Z.Min);
+            bw.Write(boundingbox.Z.Max);
         }
     }
 }
