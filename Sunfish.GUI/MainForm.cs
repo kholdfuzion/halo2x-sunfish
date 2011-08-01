@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Sunfish;
 using System.IO;
 using WeifenLuo.WinFormsUI.Docking;
+using System.Runtime.Remoting.Messaging;
 
 namespace Sunfish.GUI
 {
@@ -23,9 +24,13 @@ namespace Sunfish.GUI
 
         Dictionary<string, int> saveFilters;
 
+        Benchmark mark = new Benchmark();
+        Decompile dec;
+
         public MainForm()
         {
-            Properties.Settings.Default.ProjectsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sunfish 2011\\Projects");
+            if (Properties.Settings.Default.ProjectsDirectory == null)
+                Properties.Settings.Default.ProjectsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sunfish 2011\\Projects");
             if(!Directory.Exists(Properties.Settings.Default.ProjectsDirectory))
                 Directory.CreateDirectory(Properties.Settings.Default.ProjectsDirectory);
 
@@ -37,6 +42,8 @@ namespace Sunfish.GUI
 
             Globals.StatusChangeHandler s = new Globals.StatusChangeHandler(Status);
             Globals.StatusChanged += s;
+
+
 
             #endregion
 
@@ -64,11 +71,14 @@ namespace Sunfish.GUI
 
             #region auto load
 #if DEBUG
-            project = Project.Load(@"E:\Users\root\Documents\Sunfish 2011\Projects\frebuild\frebuild.h2proj");
+            project = Project.Load(@"O:\Sunfish 2011\Projects\taco\taco.h2proj");
             LoadProject();
 #endif
             #endregion
         }
+
+        delegate void Decompile(Map m);
+
 
         private void LoadDefaultWorkspace()
         {
@@ -146,10 +156,22 @@ namespace Sunfish.GUI
             if (openMapDialog.ShowDialog() == DialogResult.OK)
             {
                 Map map = new Map(File.Open(openMapDialog.FileName, FileMode.Open));
-                project.ImportMap(map);
-                map.BaseStream.Close();
-                DisplaySourceFiles();
+                dec = new Decompile(g);
+                dec.BeginInvoke(map, new AsyncCallback(done), this);
             }
+        }
+
+        public void g(Map map)
+        {
+            project.ImportMap(map);
+            map.BaseStream.Close();
+        }
+
+        public void done(IAsyncResult ar)
+        {
+            AsyncResult result = (AsyncResult)ar;
+            Decompile caller = (Decompile)result.AsyncDelegate;
+            caller.EndInvoke(result);
         }
 
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
@@ -173,6 +195,35 @@ namespace Sunfish.GUI
             Directory.SetCurrentDirectory(project.SourceDirectory);
             fileSystemWatcher1.Path = project.SourceDirectory;
             Explorer.LoadLayout(Path.Combine(project.RootDirectory, "user.settings"));
+
+            project.OnImportBegin += new Project.BeginImport(project_OnImportBegin);
+            project.OnImportCompleted += new Project.BeginImport(project_OnImportCompleted);
+        }
+
+        void project_OnImportCompleted()
+        {
+            BeginInvoke(new DoSomething(ImportComplete));
+        }
+
+        void project_OnImportBegin()
+        {
+            BeginInvoke(new DoSomething(ImportBegin));
+        }
+
+        delegate void DoSomething();
+        void ImportBegin()
+        {
+            mark.Begin();
+            this.Enabled = false;
+            fileSystemWatcher1.EnableRaisingEvents = false;
+        }
+        void ImportComplete()
+        {
+            mark.End();
+            this.Enabled = true;
+            fileSystemWatcher1.EnableRaisingEvents = true;
+            DisplaySourceFiles();
+            MessageBox.Show(mark.Result);
         }
 
         private void CloseProject()
@@ -334,6 +385,24 @@ namespace Sunfish.GUI
                 ProjectCompiler pc = new ProjectCompiler();
                 pc.Compile(this.project, false);
             }
+        }
+
+        private void fileSystemWatcher1_Renamed(object sender, RenamedEventArgs e)
+        {
+            RefreshSourceFiles();
+        }
+
+        private void deleteAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (project != null)
+            {
+                string[] s = Directory.GetFiles(project.SourceDirectory);
+                string[] d = Directory.GetDirectories(project.SourceDirectory);
+                foreach (string ss in s)
+                    File.Delete(ss);
+                foreach (string ds in d)
+                    Directory.Delete(ds, true);
+            } DisplaySourceFiles();
         }
     }
 }

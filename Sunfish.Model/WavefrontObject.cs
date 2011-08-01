@@ -413,19 +413,19 @@ namespace Sunfish.Mode
             }
         }
 
-        public BoundingBox GenerateBoundingBox()
+        public CompressionInfo GenerateBoundingBox()
         {
-            BoundingBox bounds = new BoundingBox();
+            CompressionInfo bounds = new CompressionInfo();
             foreach (Vector3 v in Vertices)
             {
-                bounds.X.Update(v.X);
-                bounds.Y.Update(v.Y);
-                bounds.Z.Update(v.Z);
+                bounds.X.Expand(v.X);
+                bounds.Y.Expand(v.Y);
+                bounds.Z.Expand(v.Z);
             }
             foreach (Vector2 vt in Texcoords)
             {
-                bounds.U.Update(vt.X);
-                bounds.V.Update(vt.Y);
+                bounds.U.Expand(vt.X);
+                bounds.V.Expand(vt.Y);
             }
             return bounds;
         }

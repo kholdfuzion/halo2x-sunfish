@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ProjectsDirectory" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">O:\Sunfish 2011\Projects</Value>
     </Setting>
   </Settings>
 </SettingsFile>

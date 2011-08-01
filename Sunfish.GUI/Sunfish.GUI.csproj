@@ -95,7 +95,13 @@
     <Compile Include="ModelEditor.Designer.cs">
       <DependentUpon>ModelEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="SaveTagDialog.cs" />
+    <Compile Include="ModelEditorRegionsPanel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ModelEditorRegionsPanel.Designer.cs">
+      <DependentUpon>ModelEditorRegionsPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ModelExtensions.cs" />
     <Compile Include="SolutionExplorer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -121,6 +127,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ModelEditor.resx">
       <DependentUpon>ModelEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ModelEditorRegionsPanel.resx">
+      <DependentUpon>ModelEditorRegionsPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SolutionExplorer.resx">
       <DependentUpon>SolutionExplorer.cs</DependentUpon>

@@ -3,21 +3,17 @@ using System.IO;
 using Microsoft.DirectX;
 using Sunfish.TagStructures;
 using System.Text;
+using Sunfish.ValueTypes;
+using System.Collections.Generic;
 
 namespace Sunfish.Mode
 {
-    public class Range
+    public struct Bounds
     {
         public float Min;
         public float Max;
 
-        public Range()
-        {
-            Min = 0;
-            Max = 0;
-        }
-
-        public Range(float min, float max)
+        public Bounds(float min, float max)
         {
             Min = min;
             Max = max;
@@ -36,32 +32,10 @@ namespace Sunfish.Mode
             return "Min: " + Min.ToString() + " Max: " + Max.ToString();
         }
 
-        public void Update(float value)
+        public void Expand(float value)
         {
-            if (value > Max)
-                Max = value;
-            else if (value < Min)
-                Min = value;
-        }
-
-        public void Update(Range range)
-        {
-            if (range.Min > Max)
-                Max = range.Min;
-            if (range.Max > Max)
-                Max = range.Max;
-            if (range.Min < Min)
-                Min = range.Min;
-            if (range.Max < Min)
-                Min = range.Max;
-        }
-
-        public void Commit()
-        {
-            Min = (float)Math.Round((double)Min, 5);
-            Max = (float)Math.Round((double)Max, 5);
-            Min -= 0.00001F;
-            Max += 0.00001F;
+            if (value > Max) Max = value;
+            else if (value < Min) Min = value;
         }
     }
 
@@ -85,8 +59,28 @@ namespace Sunfish.Mode
     {
         public const int Size = 132;
 
+        public List<int> SelectedIndices = new List<int>(0);
+        public int SelectedIndex
+        {
+            get { return SelectedIndices.Count > 0 ? SelectedIndices[SelectedIndices.Count - 1] : -1; }
+            set
+            {
+                SelectedIndices.Clear();
+                SelectedIndices.Add(value);
+                if (SelectedIndexChanged != null) SelectedIndexChanged(this, new EventArgs());
+            }
+        }
+
+        public event EventHandler SelectedIndexChanged;
+
+        #region
+
+        byte[] buffer;
+
+        #endregion
+
         public string Name;
-        public BoundingBox[] BoundingBoxes = new BoundingBox[0];
+        public CompressionInfo Space = new CompressionInfo();
         public Region[] Regions = new Region[0];
         public Section[] Sections = new Section[0];
         public SectionGroup[] SectionGroups = new SectionGroup[0];
@@ -98,22 +92,21 @@ namespace Sunfish.Mode
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
             tag.TagStream.Position = 0;
+            buffer = br.ReadBytes(Size);
+            tag.TagStream.Position = 0;
             Name = tag.StringReferenceNames[br.ReadInt32()];
 
             #region Bounding Boxes
 
             tag.TagStream.Position = 20;
             int Count = br.ReadInt32();
-            if (Count > 0)
+            if (Count == 1)
             {
                 int Offset = br.ReadInt32();
-                BoundingBoxes = new BoundingBox[Count];
-                for (int i = 0; i < Count; i++)
-                {
-                    tag.TagStream.Position = Offset + (i * BoundingBox.Size);
-                    BoundingBoxes[i] = new BoundingBox(tag.TagStream);
-                }
+                tag.TagStream.Position = Offset;
+                Space = new CompressionInfo(tag.TagStream);
             }
+            else throw new Exception();
 
             #endregion
 
@@ -145,7 +138,7 @@ namespace Sunfish.Mode
                 for (int i = 0; i < Count; i++)
                 {
                     tag.TagStream.Position = Offset + (i * Section.Size);
-                    Sections[i] = new Section(tag, BoundingBoxes[0]);
+                    Sections[i] = new Section(tag, Space);
                 }
             }
 
@@ -223,7 +216,9 @@ namespace Sunfish.Mode
         public byte[] Serialize(Tag tag)
         {
             MemoryStream stream = new MemoryStream(Size);
-            BinaryWriter bw = new BinaryWriter(stream); 
+            BinaryWriter bw = new BinaryWriter(stream);
+            bw.Write(buffer);
+            stream.Seek(0, SeekOrigin.Begin);
             if (!tag.StringReferenceNames.Contains(Name))
             {
                 tag.StringReferenceNames.Add(Name);
@@ -232,40 +227,48 @@ namespace Sunfish.Mode
             return stream.GetBuffer();
         }
 
-        public Tag CreateTag()
+        public Tag CreateTag(string filename)
         {
             Tag tag = new Tag();
             tag.Type = "mode";
-            tag.Filename = Tag.Path.Create(Name, tag.Type);
+            tag.Filename = filename;
             Sunfish.TagStructures.mode structure = new Sunfish.TagStructures.mode();
             structure.Data = this.Serialize(tag);
 
-            float minx, maxx, minz, maxz, miny, maxy;
-            minx = maxx = Sections[0].mesh.Vertices[0].X;
-            miny = maxy = Sections[0].mesh.Vertices[0].Y;
-            minz = maxz = Sections[0].mesh.Vertices[0].Z;
-            foreach (Vector3 v in Sections[0].mesh.Vertices)
+            float minx, maxx, minz, maxz, miny, maxy, minu, maxu, minv, maxv;
+            minx = maxx = Sections[0].mesh.Vertices[0].Position.X;
+            miny = maxy = Sections[0].mesh.Vertices[0].Position.Y;
+            minz = maxz = Sections[0].mesh.Vertices[0].Position.Z;
+            minu = maxu = Sections[0].mesh.Vertices[0].Texcoord.X;
+            minv = maxv = Sections[0].mesh.Vertices[0].Texcoord.Y;
+            for (int i = 0; i < Sections[0].mesh.Vertices.Length; i++)
             {
-                if (v.X < minx) minx = v.X;
-                if (v.X > maxx) maxx = v.X;
-                if (v.Y < miny) miny = v.Y;
-                if (v.Y > maxy) maxy = v.Y;
-                if (v.Z < minz) minz = v.Z;
-                if (v.Z > maxz) maxz = v.Z;
+                if (Sections[0].mesh.Vertices[i].Position.X < minx) minx = Sections[0].mesh.Vertices[i].Position.X;
+                if (Sections[0].mesh.Vertices[i].Position.X > maxx) maxx = Sections[0].mesh.Vertices[i].Position.X;
+                if (Sections[0].mesh.Vertices[i].Position.Y < miny) miny = Sections[0].mesh.Vertices[i].Position.Y;
+                if (Sections[0].mesh.Vertices[i].Position.Y > maxy) maxy = Sections[0].mesh.Vertices[i].Position.Y;
+                if (Sections[0].mesh.Vertices[i].Position.Z < minz) minz = Sections[0].mesh.Vertices[i].Position.Z;
+                if (Sections[0].mesh.Vertices[i].Position.Z > maxz) maxz = Sections[0].mesh.Vertices[i].Position.Z;
+                if (Sections[0].mesh.Vertices[i].Texcoord.X < minu) minu = Sections[0].mesh.Vertices[i].Texcoord.X;
+                if (Sections[0].mesh.Vertices[i].Texcoord.X > maxu) maxu = Sections[0].mesh.Vertices[i].Texcoord.X;
+                if (Sections[0].mesh.Vertices[i].Texcoord.Y < minv) minv = Sections[0].mesh.Vertices[i].Texcoord.Y;
+                if (Sections[0].mesh.Vertices[i].Texcoord.Y > maxv) maxv = Sections[0].mesh.Vertices[i].Texcoord.Y;
             }
 
-            BoundingBoxes[0].X = new Range(minx - 0.005f, maxx + 0.005f);
-            BoundingBoxes[0].Y = new Range(miny - 0.005f, maxy + 0.005f);
-            BoundingBoxes[0].Z = new Range(minz - 0.005f, maxz + 0.005f);
-
-            foreach (BoundingBox boundingBox in this.BoundingBoxes)
+            Space.X = new Bounds(minx - 0.000015f, maxx + 0.000015f);
+            Space.Y = new Bounds(miny - 0.000015f, maxy + 0.000015f);
+            Space.Z = new Bounds(minz - 0.000015f, maxz + 0.000015f);
+            Space.U = new Bounds(minu - 0.000015f, maxu + 0.000015f);
+            Space.V = new Bounds(minv - 0.000015f, maxv + 0.000015f);
+            
             {
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("bounding box")] as TagBlockArray;
                 arr.SetDataReference(structure.Data);
                 TagBlock tb = arr.Default;
-                tb.Data = boundingBox.Serialize();
+                tb.Data = Space.Serialize();
                 arr.Add(tb);
             }
+
             foreach (Region region in this.Regions)
             {
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("region")] as TagBlockArray;
@@ -287,8 +290,8 @@ namespace Sunfish.Mode
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("section")] as TagBlockArray;
                 arr.SetDataReference(structure.Data);
                 TagBlock tb = arr.Default;
-                tb.Data = section.Serialize(tag, BoundingBoxes[0]);
-                foreach (Resource  resource in section.Resources)
+                tb.Data = section.Serialize(tag, Space);
+                foreach (Resource resource in section.Resources)
                 {
                     TagBlockArray permArr = tb.Values[tb.IndexOfValue("resource")] as TagBlockArray;
                     permArr.SetDataReference(tb.Data);
@@ -313,7 +316,7 @@ namespace Sunfish.Mode
                     permArr.Add(permTagBlock);
                 }
                 arr.Add(tb);
-            } 
+            }
             foreach (Node node in this.Nodes)
             {
                 TagBlockArray arr = structure.Values[structure.IndexOfValue("node")] as TagBlockArray;
@@ -351,32 +354,66 @@ namespace Sunfish.Mode
         }
     }
 
-    public class BoundingBox
+    public class CompressionInfo
     {
-        public const float HalfRatio = ushort.MaxValue / 2;
-        public const float FullRatio = ushort.MaxValue;
         public const int Size = 56;
 
-        public Range X;
-        public Range Y;
-        public Range Z;
-        public Range U;
-        public Range V;
-        public Range U2;
-        public Range V2;
+        public Bounds X;
+        public Bounds Y;
+        public Bounds Z;
+        public Bounds U;
+        public Bounds V;
+        public Bounds U2;
+        public Bounds V2;
 
-        public BoundingBox() { }
+        public static float Decompress(short value, Bounds bounds)
+        {
+            const float Max = 1.0f / ushort.MaxValue;
+            const float Half = short.MaxValue;
+            return ((((float)value + Half) * Max ) * (bounds.Max - bounds.Min)) + bounds.Min;
+        }
 
-        public BoundingBox(Stream stream)
+        public static short Compress(float raw, Bounds bounds)
+        {
+            const float Max = short.MaxValue;
+            return (short)(((raw - bounds.Min) / (bounds.Max - bounds.Min)) * Max);
+        }
+
+        public static Vector3 Decompress(int compressedcoord)
+        {
+            int x10 = (compressedcoord & 0x000007FF);
+            if ((x10 & 0x00000400) == 0x00000400)
+            {
+                x10 = -((~x10) & 0x000007FF);
+                if (x10 == 0) x10 = -1;
+            }
+            int y11 = (compressedcoord >> 11) & 0x000007FF;
+            if ((y11 & 0x00000400) == 0x00000400)
+            {
+                y11 = -((~y11) & 0x000007FF);
+                if (y11 == 0) y11 = -1;
+            }
+            int z11 = (compressedcoord >> 22) & 0x000003FF;
+            if ((z11 & 0x00000200) == 0x00000200)
+            {
+                z11 = -((~z11) & 0x000003FF);
+                if (z11 == 0) z11 = -1;
+            }
+            return new Vector3((x10 / (float)0x000003ff), (y11 / (float)0x000003FF), (z11 / (float)0x000001FF));
+        }
+
+        public  CompressionInfo() { }
+
+        public CompressionInfo(Stream stream)
         {
             BinaryReader br = new BinaryReader(stream);
-            X = new Range(br.ReadSingle(), br.ReadSingle());
-            Y = new Range(br.ReadSingle(), br.ReadSingle());
-            Z = new Range(br.ReadSingle(), br.ReadSingle());
-            U = new Range(br.ReadSingle(), br.ReadSingle());
-            V = new Range(br.ReadSingle(), br.ReadSingle());
-            U2 = new Range(br.ReadSingle(), br.ReadSingle());
-            V2 = new Range(br.ReadSingle(), br.ReadSingle());
+            X = new Bounds(br.ReadSingle(), br.ReadSingle());
+            Y = new Bounds(br.ReadSingle(), br.ReadSingle());
+            Z = new Bounds(br.ReadSingle(), br.ReadSingle());
+            U = new Bounds(br.ReadSingle(), br.ReadSingle());
+            V = new Bounds(br.ReadSingle(), br.ReadSingle());
+            U2 = new Bounds(br.ReadSingle(), br.ReadSingle());
+            V2 = new Bounds(br.ReadSingle(), br.ReadSingle());
         }
 
         public byte[] Serialize()
@@ -554,11 +591,14 @@ namespace Sunfish.Mode
     public class Section
     {
         public const int Size = 92;
+        byte[] buffer;
 
         public VertexType VertexType;
 
         public short VertexCount;
         public short TriangleCount;
+
+        public Microsoft.Xna.Framework.BoundingBox BoundingBox;
 
         public Mesh mesh;
 
@@ -570,11 +610,14 @@ namespace Sunfish.Mode
         public int RawDataSize;
         public Resource[] Resources = new Resource[0];
 
-        public Section(Tag tag, BoundingBox boundingBox)
+        public Section(Tag tag, CompressionInfo boundingBox)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-
             int StartOffset = (int)tag.TagStream.Position;
+
+            buffer = br.ReadBytes(Size);
+            tag.TagStream.Position = StartOffset;
+
             VertexType = (VertexType)br.ReadInt32();
             VertexCount = br.ReadInt16();
             TriangleCount = br.ReadInt16();
@@ -603,13 +646,20 @@ namespace Sunfish.Mode
             if (Globals.IsExternalResource(RawOffset)) { return; }
             tag.ResourceStream.Position = tag.ResourceInformation[RawOffset].Address;
             mesh = new Mesh(tag.ResourceStream, Resources, this, boundingBox);
+
+            Microsoft.Xna.Framework.Vector3[] points = new Microsoft.Xna.Framework.Vector3[mesh.Vertices.Length];
+            for (int i = 0; i < points.Length; i++)
+                points[i] = mesh.Vertices[i].Position;
+            BoundingBox = Microsoft.Xna.Framework.BoundingBox.CreateFromPoints(points);
         }
 
-        public byte[] Serialize(Tag tag, BoundingBox boundingBox)
+        public byte[] Serialize(Tag tag, CompressionInfo boundingBox)
         {
             RawOffset = tag.AddRaw(mesh.Serialize(this, boundingBox, out Resources));
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
+            bw.Write(buffer);
+            stream.Seek(0, SeekOrigin.Begin);
             VertexCount = (short)mesh.Vertices.Length;
             TriangleCount = (short)(mesh.Indices.Length - 2);
             VertexType = VertexType.Rigid;
@@ -765,10 +815,10 @@ namespace Sunfish.Mode
             bw.Write(Translation.X);
             bw.Write(Translation.Y);
             bw.Write(Translation.Z);
-            bw.Write(Rotation.W);
             bw.Write(Rotation.X);
             bw.Write(Rotation.Z);
             bw.Write(Rotation.Y);
+            bw.Write(Rotation.W);
             bw.Write(Scale);
             bw.Write(InverseForward.X);
             bw.Write(InverseForward.Y);
@@ -807,7 +857,8 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            stream.Position = 8;
+            bw.Write(new TagType("shad"));
+            bw.Write(-1);
             if (!tag.TagReferences.Contains(filename))
             {
                 tag.TagReferences.Add(filename);
