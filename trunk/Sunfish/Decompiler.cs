@@ -248,8 +248,9 @@ namespace Sunfish
                     string type = map.Index.TagEntries[idReferences[i] & 0x0000FFFF].Type.ToString();
                     type = Index.GetCleanType(type).Trim();
                     string tagname = map.Tagnames[idReferences[i] & 0x0000FFFF];
-                    memWriter.Write(Encoding.UTF8.GetBytes(Path.ChangeExtension(tagname, type)));
-                    memWriter.Write(Encoding.UTF8.GetBytes(Tag.Path.Extension));
+                    string filepath = Path.ChangeExtension(tagname, type) + Tag.Path.Extension;
+                    filepath = Path.Combine(Directory.GetCurrentDirectory(), filepath);
+                    memWriter.Write(Encoding.UTF8.GetBytes(filepath));
                     memWriter.Write(byte.MinValue);
                 }
                 stream.Position -= 1;

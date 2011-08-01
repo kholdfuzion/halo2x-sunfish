@@ -54,6 +54,11 @@ namespace Sunfish
 
         public void Compile(Project project, bool rebuildcaches)
         {
+            List<string> filenames = new List<string>(Directory.GetFiles(project.SourceDirectory, String.Format("*{0}", Sunfish.Tag.Path.Extension), SearchOption.AllDirectories));
+            project.SourceFiles = new List<string>(filenames);
+            //for(int i=0;i<project.SourceFiles.Count;i++)
+            //    project.SourceFiles[i] = project.SourceFiles[i].Substring(project.SourceDirectory.Length);
+            project.SortSourceFiles();
             Benchmark mark = new Benchmark();
             mark.Begin();
             if (!rebuildcaches && CheckCacheStatus(project)) { LoadCaches(project); }

@@ -16,8 +16,36 @@ namespace Sunfish
         public string BinDirectory { get { return Path.Combine(RootDirectory, "bin\\"); } }
         public string Scenario { get; set; }
         public DateTime CacheCreationDate { get; set; }
-        public List<string> SourceFiles = new List<string>();
+        public List<string> SourceFiles { get { return _sourceFiles; } set { _sourceFiles = value; } }
+
+        public delegate void BeginImport();
+        public event BeginImport OnImportBegin;
+
+        public delegate void EndImport();
+        public event BeginImport OnImportCompleted;
+
+        public void SortSourceFiles()
+        {
+            int scnrindex = -1, globalsindex = -1, soundindex = -1;
+            for (int i = 0; i < _sourceFiles.Count; i++)
+                if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "scnr") { scnrindex = i; }
+                else if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "matg") { globalsindex = i; }
+                else if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "ugh") { soundindex = i; }
+            string matg = _sourceFiles[globalsindex];
+            string scnr = _sourceFiles[scnrindex];
+            string ugh = _sourceFiles[soundindex];
+            _sourceFiles.RemoveAt(globalsindex);
+            _sourceFiles.RemoveAt(scnrindex);
+            _sourceFiles.RemoveAt(soundindex);
+            _sourceFiles.Insert(0, matg);
+            _sourceFiles.Insert(3, scnr);
+            _sourceFiles.Add(ugh);
+        }
+
         public List<string> Includes = new List<string>();
+
+        
+        public List<string> _sourceFiles;
 
         public static Project Load(string filename)
         {
@@ -84,12 +112,6 @@ namespace Sunfish
             xmlWriter.WriteAttributeString("path", this.RootDirectory);
             xmlWriter.WriteEndElement();
             xmlWriter.WriteStartElement("Includes");
-            foreach (string fileName in this.SourceFiles)
-            {
-                xmlWriter.WriteStartElement("Include");
-                xmlWriter.WriteAttributeString("include", fileName);
-                xmlWriter.WriteEndElement();
-            }
             xmlWriter.WriteEndElement();
             xmlWriter.WriteEndDocument();
             xmlWriter.Close();
@@ -123,11 +145,12 @@ namespace Sunfish
         {
             //Benchmark mark = new Benchmark();
             //mark.Begin();
+            OnImportBegin();
             Decompiler decompiler = new Decompiler(map);
             Directory.SetCurrentDirectory(SourceDirectory);
             foreach (Index.TagInformation Entry in map.Index.TagEntries)
             {
-                Globals.Status = "Importing \"" + map.Tagnames[Entry.Index & 0x0000FFFF] + "\"";
+                //Globals.Status = "Importing \"" + map.Tagnames[Entry.Index & 0x0000FFFF] + "\"";
                 string filename = Path.ChangeExtension(map.Tagnames[Entry.Index & 0x0000FFFF], Index.GetCleanType(Entry.Type.ToString()).Trim()) + Tag.Path.Extension;
                 //if (File.Exists(Path.Combine(this.SourceDirectory, filename)))
                 //{
@@ -141,11 +164,11 @@ namespace Sunfish
                 else
                     decompiler.Decompile(Entry, filename, map.SecondaryMagic);
                 if (Entry.Type == "scnr") Scenario = filename;
-                Application.DoEvents();
                 //this.SourceFiles.Add(filename);
             }
-            Globals.ClearStatus();
+            //Globals.ClearStatus();
             Save();
+            OnImportCompleted();
             //mark.End();
             //MessageBox.Show(string.Format("Finished in: {0}", mark.Result), "Project Created");
         }

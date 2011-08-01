@@ -39,7 +39,7 @@ namespace Sunfish.GUI
             {
                 using (BinaryReader br = new BinaryReader(File.OpenRead(filename)))
                     while (br.BaseStream.Position < br.BaseStream.Length) states.Add(br.ReadBoolean());
-                int index = 0;
+                int index = -1;
                 SetNodeStates(treeView1.Nodes, states, ref index);
             }
             catch {}
