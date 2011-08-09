@@ -11,10 +11,11 @@ using Sunfish.TagStructures;
 
 namespace Sunfish.MetaEditor
 {
-    public partial class MetaGridView : DataGridView
+    public partial class MetaGridView : UserControl
     {
         bool loaded = false;
-        TagBlock workingTagblock;
+        public Tag HaloTag;
+        public TagBlock workingTagblock;
         DataGridViewCellStyle Disabled = new DataGridViewCellStyle()
         {
             BackColor = SystemColors.Control,
@@ -31,251 +32,337 @@ namespace Sunfish.MetaEditor
 
         public void LoadTag(Tag tag)
         {
-            Tag = tag;
+            HaloTag = tag;
             workingTagblock = TagBlock.CreateInstance(tag.Type);
             workingTagblock.Deserialize(tag.TagStream, 0, 0);
-            XmlReader xmlReader = XmlReader.Create(@"./MetaLayouts/scnr.xml");
             Enabled = false;
-            Rows.AddRange(LoadRows(xmlReader));
-            LoadValues(workingTagblock, 0, Rows.GetRowCount(DataGridViewElementStates.Visible));
+            XmlDocument xDoc = new XmlDocument();
+            xDoc.Load(System.IO.Path.GetDirectoryName(Application.ExecutablePath) + string.Format(@"./MetaLayouts/{0}.xml", new Sunfish.ValueTypes.TagType(tag.Type).ToPathSafeString()));
+            LoadTreeView(xDoc.LastChild.LastChild, workingTagblock);
             Enabled = true;
             loaded = true;
-            ApplyStyle();
+        }
+
+        private void LoadTreeView(XmlNode parentnode, TagBlock workingTagblock)
+        {
+            treeView1.Nodes.Clear();
+            TagHeaderTreeNode node = new TagHeaderTreeNode(workingTagblock.Name, parentnode, workingTagblock);
+            treeView1.Nodes.Add(node);
+            LoadTreeView(parentnode, workingTagblock, treeView1.Nodes[0]);
+            treeView1.SelectedNode = treeView1.TopNode;
+            treeView1.TopNode.Expand();
+        }
+
+        private void LoadTreeView(XmlNode parentnode, TagBlock workingTagblock, TreeNode node)
+        {
+            int offset = 0;
+            foreach (XmlNode childnode in parentnode)
+            {
+                if (childnode.NodeType == XmlNodeType.Element)
+                {
+                    switch (childnode.Name.ToLower())
+                    {
+                        case "tagblock":
+                            if (workingTagblock.Values == null) { return; }
+                            foreach (Value value in workingTagblock.Values)
+                            {
+                                if (value.Offset == offset && value is TagBlockArray && (value as TagBlockArray).Length > 0)
+                                {
+                                    TagStructArrayTreeNode treenode = new TagStructArrayTreeNode(childnode.Attributes["name"].Value, childnode);
+                                    for (int i = 0; i < (value as TagBlockArray).Length; i++)
+                                    {
+                                        TagStructTreeNode childtreenode = new TagStructTreeNode(string.Format("chunk:{0}", i), (value as TagBlockArray).TagBlocks[i]);
+                                        LoadTreeView(childnode, (value as TagBlockArray).TagBlocks[i], childtreenode);
+                                        treenode.Nodes.Add(childtreenode);
+                                    }
+                                    node.Nodes.Add(treenode);
+                                    break;
+                                }
+                            }
+                            offset += 8;
+                            break;
+                        case "taginstance":
+                            offset += 8;
+                            break;
+                        case "tagclass":
+                            offset += 4;
+                            break;
+                        case "tagindex":
+                            offset += 4;
+                            break;
+                        case "stringid":
+                            offset += 4;
+                            break;
+                        case "string":
+                            offset += int.Parse(childnode.Attributes["byte-length"].Value);
+                            break;
+                        case "unused":
+                            offset += int.Parse(childnode.Attributes["length"].Value);
+                            break;
+                        case "byte":
+                            offset += sizeof(byte);
+                            break;
+                        case "short":
+                            offset += sizeof(short);
+                            break;
+                        case "ushort":
+                            offset += sizeof(ushort);
+                            break;
+
+                        case "int":
+                            offset += sizeof(int);
+                            break;
+                        case "uint":
+                            offset += sizeof(uint);
+                            break;
+                        case "float":
+                        case "single":
+                            offset += sizeof(float);
+                            break;
+                        case "enum":
+                            switch (childnode.Attributes["base"].Value)
+                            {
+                                case "byte":
+                                    offset += sizeof(byte);
+                                    break;
+                                case "short":
+                                    offset += sizeof(short);
+                                    break;
+                                case "int":
+                                    offset += sizeof(int);
+                                    break;
+                            }
+                            break;
+                        case "flags":
+                            switch (childnode.Attributes["base"].Value)
+                            {
+                                case "byte":
+                                    offset += sizeof(byte);
+                                    break;
+                                case "short":
+                                    offset += sizeof(short);
+                                    break;
+                                case "int":
+                                    offset += sizeof(int);
+                                    break;
+                            }
+                            break;
+                        default:
+                            { }
+                            break;
+                    }
+                }
+            }
         }
 
         public void Save()
         {
-            SaveValues(workingTagblock, 0, Rows.GetRowCount(DataGridViewElementStates.Visible));
+            //SaveValues(workingTagblock, 0, dataGridView.Rows.GetRowCount(DataGridViewElementStates.Visible));
         }
 
-        private void LoadValues(TagBlock tagBlock, int startIndex, int count)
+        void LoadValues(TagBlock tagBlock, int startIndex, int count)
         {
             int offset;
             for (int i = startIndex; i < startIndex + count; i++)
             {
-                offset = (int)Rows[i].Cells[3].Value;
-                if (Rows[i] is MetaGridViewTagBlockRow)
+                try
                 {
-                    int valueOffset = 0;
-                    if (tagBlock.Values == null) continue;
-                    foreach (Value value in tagBlock.Values)
+                    if (dataGridView.Rows[i] is Row) { (dataGridView.Rows[i] as Row).Data = tagBlock.Data; }
+                    offset = (dataGridView.Rows[i] as Row).Offset;
+                    if (dataGridView.Rows[i] is StringRow)
+                        dataGridView.Rows[i].Cells[2].Value = (dataGridView.Rows[i] as StringRow).Encoding.GetString(tagBlock.Data, offset, (dataGridView.Rows[i] as StringRow).Length).Trim(char.MinValue);
+                    else if (dataGridView.Rows[i] is StringIdRow)
                     {
-                        if (value.Offset == offset)
-                        {
-                            if ((value as TagBlockArray).Length > 0)
-                            {
-                                int index = 0;
-                                (Rows[i].Cells[2] as DataGridViewComboBoxCell).ValueType = typeof(int);
-                                (Rows[i].Cells[2] as DataGridViewComboBoxCell).Items.Clear();
-                                while (index < (value as TagBlockArray).Length)
-                                {
-                                    (Rows[i].Cells[2] as DataGridViewComboBoxCell).Items.Add(index);
-                                    index++;
-                                }
-                                (Rows[i].Cells[2] as DataGridViewComboBoxCell).Value = 0;
-                                (Rows[i] as MetaGridViewTagBlockRow).tagBlockArray = (value as TagBlockArray);
-                                LoadValues((Rows[i] as MetaGridViewTagBlockRow).tagBlockArray.TagBlocks[0], i + 1, (Rows[i] as MetaGridViewTagBlockRow).Length);
-                            }
-                            else
-                            {
-                                DisableRows(i, (Rows[i] as MetaGridViewTagBlockRow).Length + 1);
-                            }
-                            break;
-                        }
-                        valueOffset += value.Size;
+                        Sunfish.ValueTypes.StringId sid = BitConverter.ToInt32(tagBlock.Data, offset);
+                        (dataGridView.Rows[i] as StringIdRow).Value = HaloTag.Strings[sid.Index];
                     }
-                    i += (Rows[i] as MetaGridViewTagBlockRow).Length;
-                }
-                else if (Rows[i] is MetaGridViewRow)
-                {
-                    //Load byte
-                    if (Rows[i].Cells[2].ValueType == typeof(byte))
-                        Rows[i].Cells[2].Value = tagBlock.Data[offset];
-                    //Load short
-                    else if (Rows[i].Cells[2].ValueType == typeof(short))
-                        Rows[i].Cells[2].Value = BitConverter.ToInt16(tagBlock.Data, offset);
-                    //Load ushort
-                    else if (Rows[i].Cells[2].ValueType == typeof(ushort))
-                        Rows[i].Cells[2].Value = BitConverter.ToUInt16(tagBlock.Data, offset);
-                    //Load int
-                    else if (Rows[i].Cells[2].ValueType == typeof(int))
-                        Rows[i].Cells[2].Value = BitConverter.ToInt32(tagBlock.Data, offset);
-                    //Load uint
-                    else if (Rows[i].Cells[2].ValueType == typeof(uint))
-                        Rows[i].Cells[2].Value = BitConverter.ToUInt32(tagBlock.Data, offset);
-                    //Load float
-                    else if (Rows[i].Cells[2].ValueType == typeof(float))
-                        Rows[i].Cells[2].Value = BitConverter.ToSingle(tagBlock.Data, offset);
+                    else if (dataGridView.Rows[i] is TagDialogRow)
+                    {
+                        Sunfish.ValueTypes.TagType type = new Sunfish.ValueTypes.TagType(new byte[] { tagBlock.Data[offset], tagBlock.Data[offset + 1], tagBlock.Data[offset + 2], tagBlock.Data[offset + 3] });
+                        Sunfish.ValueTypes.TagIndex index = BitConverter.ToInt32(tagBlock.Data, offset + 4);
+                        (dataGridView.Rows[i] as TagDialogRow).Value = HaloTag.TagReferences[index.Index];
+                    }
+                    else if (dataGridView.Rows[i] is Row)
+                    {
+                        //Load byte
+                        if (dataGridView.Rows[i].Cells[2].ValueType == typeof(byte))
+                            dataGridView.Rows[i].Cells[2].Value = tagBlock.Data[offset];
+                        //Load short
+                        else if (dataGridView.Rows[i].Cells[2].ValueType == typeof(short))
+                            dataGridView.Rows[i].Cells[2].Value = BitConverter.ToInt16(tagBlock.Data, offset);
+                        //Load ushort
+                        else if (dataGridView.Rows[i].Cells[2].ValueType == typeof(ushort))
+                            dataGridView.Rows[i].Cells[2].Value = BitConverter.ToUInt16(tagBlock.Data, offset);
+                        //Load int
+                        else if (dataGridView.Rows[i].Cells[2].ValueType == typeof(int))
+                            dataGridView.Rows[i].Cells[2].Value = BitConverter.ToInt32(tagBlock.Data, offset);
+                        //Load uint
+                        else if (dataGridView.Rows[i].Cells[2].ValueType == typeof(uint))
+                            dataGridView.Rows[i].Cells[2].Value = BitConverter.ToUInt32(tagBlock.Data, offset);
+                        //Load float
+                        else if (dataGridView.Rows[i].Cells[2].ValueType == typeof(float))
+                            dataGridView.Rows[i].Cells[2].Value = BitConverter.ToSingle(tagBlock.Data, offset);
 
+                        else DisableRows(i, 1);
+
+                    }
+                    else DisableRows(i, 1);
                 }
+                catch { continue; }
             }
         }
 
-        private void SaveValues(TagBlock tagBlock, int startIndex, int count)
+        void SaveValues(int startIndex, int count)
         {
             for (int i = startIndex; i < startIndex + count; i++)
             {
-                if (Rows[i] is MetaGridViewTagBlockRow)
+                if (dataGridView.Rows[i] is StringRow)
                 {
-                    int valueOffset = 0;
-                    foreach (Value value in tagBlock.Values)
-                    {
-                        if (value.Offset == (int)Rows[i].Cells[3].Value)
-                        {
-                            if ((value as TagBlockArray).Length > 0)
-                            {
-                                int index = (int)Rows[i].Cells[2].Value;
-                                SaveValues((Rows[i] as MetaGridViewTagBlockRow).tagBlockArray.TagBlocks[index], i + 1, (Rows[i] as MetaGridViewTagBlockRow).Length);
-                            }
-                            break;
-                        }
-                        valueOffset += value.Size;
-                    }
-                    i += (Rows[i] as MetaGridViewTagBlockRow).Length;
+                    StringRow strrow = (dataGridView.Rows[i] as StringRow);
+                    byte[] buffer = new byte[strrow.Length]; 
+                    byte[] strbytes = strrow.Encoding.GetBytes(dataGridView.Rows[i].Cells[2].Value.ToString());
+                    Array.Copy(strbytes, buffer, Clamp(strbytes.Length, strrow.Length));
+                    Array.Copy(buffer, 0, strrow.Data, strrow.Offset, buffer.Length);
                 }
-                else if (Rows[i] is MetaGridViewRow)
+                else if (dataGridView.Rows[i] is StringIdRow)
                 {
-                    if (Rows[i].Cells[2].ValueType == typeof(byte))
-                    {
-                        tagBlock.Data[(int)Rows[i].Cells[3].Value] = (byte)Rows[i].Cells[2].Value;
-                    }
-                    else if (Rows[i].Cells[2].ValueType == typeof(short))
-                    {
-                        tagBlock.Data = SetTagBlockData(tagBlock.Data, BitConverter.GetBytes((short)Rows[i].Cells[2].Value), (int)Rows[i].Cells[3].Value);
-                    }
-                    else if (Rows[i].Cells[2].ValueType == typeof(ushort))
-                    {
-                        tagBlock.Data = SetTagBlockData(tagBlock.Data, BitConverter.GetBytes((ushort)Rows[i].Cells[2].Value), (int)Rows[i].Cells[3].Value);
-                    }
-                    else if (Rows[i].Cells[2].ValueType == typeof(int))
-                    {
-                        tagBlock.Data = SetTagBlockData(tagBlock.Data, BitConverter.GetBytes((int)Rows[i].Cells[2].Value), (int)Rows[i].Cells[3].Value);
-                    }
-                    else if (Rows[i].Cells[2].ValueType == typeof(float))
-                    {
-                        tagBlock.Data = SetTagBlockData(tagBlock.Data, BitConverter.GetBytes((float)Rows[i].Cells[2].Value), (int)Rows[i].Cells[3].Value);
-                    }
+                    string str = dataGridView.Rows[i].Cells[2].Value.ToString();
+                    if (!HaloTag.Strings.Contains(str)) HaloTag.Strings.Add(str);
                 }
+                else if (dataGridView.Rows[i] is Row)
+                    SaveValue(dataGridView.Rows[i] as Row);
             }
         }
 
-        private byte[] SetTagBlockData(byte[] tagBlockData, byte[] buffer, int startIndex)
+        int Clamp(int length, int max)
         {
-            for (int index = 0; index < buffer.Length; index++)
-                tagBlockData[startIndex + index] = buffer[index];
-            return tagBlockData;
+            if (length > max) return max;
+            else return length;
         }
 
-        private DataGridViewRow[] LoadRows(XmlReader xmlReader) { return LoadRows(xmlReader, 0); }
-
-        private DataGridViewRow[] LoadRows(XmlReader xmlReader, int depth)
+        void SaveValue(Row row)
         {
+            if (row.Cells[2].ValueType == typeof(byte))
+                row.Data[row.Offset] = (byte)row.Cells[2].Value;
+            else if (row.Cells[2].ValueType == typeof(short))
+                Array.Copy(BitConverter.GetBytes((short)row.Cells[2].Value), 0, row.Data, row.Offset, sizeof(short));
+            else if (row.Cells[2].ValueType == typeof(ushort))
+                Array.Copy(BitConverter.GetBytes((ushort)row.Cells[2].Value), 0, row.Data, row.Offset, sizeof(ushort));
+            else if (row.Cells[2].ValueType == typeof(int))
+                Array.Copy(BitConverter.GetBytes((int)row.Cells[2].Value), 0, row.Data, row.Offset, sizeof(int));
+            else if (row.Cells[2].ValueType == typeof(uint))
+                Array.Copy(BitConverter.GetBytes((uint)row.Cells[2].Value), 0, row.Data, row.Offset, sizeof(uint));
+            else if (row.Cells[2].ValueType == typeof(float))
+                Array.Copy(BitConverter.GetBytes((float)row.Cells[2].Value), 0, row.Data, row.Offset, sizeof(float));
+        }
 
+        DataGridViewRow[] LoadRows(XmlNode parentnode) { return LoadRows(parentnode, 0); }
+
+        DataGridViewRow[] LoadRows(XmlNode parentnode, int depth)
+        {
             List<DataGridViewRow> Rows = new List<DataGridViewRow>();
-            xmlReader.Read();
             int offset = 0;
-            while (xmlReader.Read())
+            foreach(XmlNode childnode in parentnode.ChildNodes)
             {
-                if (xmlReader.NodeType == XmlNodeType.Element)
+                if (childnode.NodeType == XmlNodeType.Element)
                 {
-                    switch (xmlReader.Name.ToLower())
+                    switch (childnode.Name.ToLower())
                     {
                         case "tagblock":
-                            Rows.Add(new MetaGridViewTagBlockRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].ValueType = typeof(TagBlockArray);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth + 1;
-                            DataGridViewRow[] tagBlockRows = LoadRows(xmlReader.ReadSubtree(), depth + 1);
-                            xmlReader.Skip();
-                            (Rows[Rows.Count - 1] as MetaGridViewTagBlockRow).Length = tagBlockRows.Length;
-                            Rows.AddRange(tagBlockRows);
                             offset += 8;
                             break;
+                        case "taginstance":
+                            Rows.Add(new TagDialogRow(childnode.Attributes["name"].Value, offset, depth));
+                            offset += 4;
+                            break;
+                        case "tagclass":
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(Sunfish.ValueTypes.TagType), offset, depth));
+                            offset += 4;
+                            break;
+                        case "tagindex":
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(Sunfish.ValueTypes.TagIndex), offset, depth));
+                            offset += 4;
+                            break;
+                        case "stringid":
+                            Rows.Add(new StringIdRow(childnode.Attributes["name"].Value, offset, depth));
+                            offset += 4;
+                            break;
+                        case "string":
+                            Encoding e =Encoding.UTF8;
+                            switch (childnode.Attributes["encoding"].Value)
+                            {
+                                case "utf-16":
+                                    e = Encoding.Unicode;
+                                    break;
+                            }
+                            StringRow newrow = new StringRow(childnode.Attributes["name"].Value, offset, depth, int.Parse(childnode.Attributes["byte-length"].Value), e);
+                            (newrow.Cells[2] as DataGridViewTextBoxCell).MaxInputLength = int.Parse(childnode.Attributes["byte-length"].Value);
+                            Rows.Add(newrow);
+                            offset += int.Parse(childnode.Attributes["byte-length"].Value);
+                            break;
                         case "unused":
-                            int unusedCount = int.Parse(xmlReader.GetAttribute("count"));
-                            offset += unusedCount;
+                            offset += int.Parse(childnode.Attributes["length"].Value);
                             break;
                         case "byte":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "byte";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(byte);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 1;
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(byte), offset, depth));
+                            offset += sizeof(byte);
                             break;
                         case "short":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "short";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(short);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 2;
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(short), offset, depth));
+                            offset += sizeof(short);
                             break;
                         case "ushort":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "ushort";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(ushort);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 2;
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(ushort), offset, depth));
+                            offset += sizeof(ushort);
                             break;
-                        case "enum16":
-                            Rows.Add(new MetaGridViewEnumRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "enum16";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(string);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            XmlReader xmlReaderOptions = xmlReader.ReadSubtree();
-                            int value = 0;
-                            while (xmlReaderOptions.Read())
-                            {
-                                if (xmlReaderOptions.NodeType == XmlNodeType.Element)
-                                {
-                                    if (xmlReaderOptions.Name.ToLower() == "option")
-                                    {
-                                        string name = xmlReaderOptions.GetAttribute("name");
-                                        try { value = int.Parse(xmlReaderOptions.GetAttribute("value")); }
-                                        catch (ArgumentNullException) { }
-                                        finally { }
-                                        (Rows[Rows.Count - 1].Cells[2] as MetaGridViewEnumComboBoxCell).AddEnumOption(name, value);
-                                        value++;
-                                    }
-                                }
-                            }
-                            xmlReader.Skip();
-                            offset += 2;
-                            break;
+
                         case "int":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "int";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(int);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 4;
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(int), offset, depth));
+                            offset += sizeof(int);
                             break;
                         case "uint":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "uint";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(uint);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 4;
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(uint), offset, depth));
+                            offset += sizeof(uint);
                             break;
                         case "float":
-                            Rows.Add(new MetaGridViewRow());
-                            Rows[Rows.Count - 1].Cells[0].Value = xmlReader.GetAttribute("name");
-                            Rows[Rows.Count - 1].Cells[1].Value = "single";
-                            Rows[Rows.Count - 1].Cells[2].ValueType = typeof(float);
-                            Rows[Rows.Count - 1].Cells[3].Value = offset;
-                            Rows[Rows.Count - 1].Cells[4].Value = depth;
-                            offset += 4;
+                        case "single":
+                            Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(float), offset, depth));
+                            offset += sizeof(float);
+                            break;
+                        case "enum":
+                            switch (childnode.Attributes["base"].Value)
+                            {
+                                case "byte":
+                                    Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(byte), offset, depth));
+                                    offset += sizeof(byte);
+                                    break;
+                                case "short":
+                                    Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(short), offset, depth));
+                                    offset += sizeof(short);
+                                    break;
+                                case "int":
+                                    Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(int), offset, depth));
+                                    offset += sizeof(int);
+                                    break;
+                            }
+                            break;
+                        case "flags":
+                            switch (childnode.Attributes["base"].Value)
+                            {
+                                case "byte":
+                                    Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(byte), offset, depth));
+                                    offset += sizeof(byte);
+                                    break;
+                                case "short": Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(short), offset, depth));
+                                    offset += sizeof(short);
+                                    break;
+                                case "int": Rows.Add(new TextBoxRow(childnode.Attributes["name"].Value, typeof(int), offset, depth));
+                                    offset += sizeof(int);
+                                    break;
+                            }
+                            break;
+                        default:
+                            { }
                             break;
                     }
                 }
@@ -283,129 +370,205 @@ namespace Sunfish.MetaEditor
             return Rows.ToArray();
         }
 
-        private void DisableRows(int startIndex, int count)
+        void DisableRows(int startIndex, int count)
         {
             for (int i = startIndex; i < startIndex + count; i++)
             {
-                Rows[i].ReadOnly = true;
-                Rows[i].Cells[4].Value = -1;
+                dataGridView.Rows[i].ReadOnly = true;
+                (dataGridView.Rows[i] as Row).Depth = -1;
             }
         }
 
-        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (!loaded) return;
-            if (Rows[e.RowIndex] is MetaGridViewTagBlockRow)
+            else if (dataGridView.Rows[e.RowIndex] is Row)
             {
-                if (e.ColumnIndex == 2)
-                {
-                    LoadValues((Rows[e.RowIndex] as MetaGridViewTagBlockRow).tagBlockArray.TagBlocks[(int)Rows[e.RowIndex].Cells[e.ColumnIndex].Value], e.RowIndex + 1, (Rows[e.RowIndex] as MetaGridViewTagBlockRow).Length);
-                }
+                SaveValues(e.RowIndex, 1);
             }
+
         }
 
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == 2)
-            {
-                BeginEdit(false);
-            }
+            
         }
 
-        private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
-            if (CurrentCell.ColumnIndex == 2)
-            {
-                if (e.Control is DataGridViewComboBoxEditingControl)
-                {
-                    DataGridViewComboBoxEditingControl control = e.Control as DataGridViewComboBoxEditingControl;
-                    control.SelectedValueChanged += new EventHandler(control_SelectedValueChanged);
-                }
-            }
-        }
-
-        void control_SelectedValueChanged(object sender, EventArgs e)
-        {
-            if (CurrentRow is MetaGridViewTagBlockRow)
-                LoadValues((CurrentRow as MetaGridViewTagBlockRow).tagBlockArray.TagBlocks[(int)(sender as DataGridViewComboBoxEditingControl).SelectedItem], CurrentRow.Index + 1, (CurrentRow as MetaGridViewTagBlockRow).Length);
-        }
-
-        private void ApplyStyle()
+        void ApplyStyle()
         {
             uint color = 0xFFFFFFFF;
             int Dec = 0x00101200;
-            for (int i = 0; i < RowCount; i++)
+            for (int i = 0; i < dataGridView.RowCount; i++)
             {
-                if ((int)Rows[i].Cells[4].Value == -1)
-                    Rows[i].DefaultCellStyle = Disabled;
-                else Rows[i].DefaultCellStyle.BackColor = Color.FromArgb((int)(color - (Dec * (int)Rows[i].Cells[4].Value)));
+                if ((dataGridView.Rows[i] as Row).Depth == -1)
+                    dataGridView.Rows[i].DefaultCellStyle = Disabled;
+                else dataGridView.Rows[i].DefaultCellStyle.BackColor = Color.FromArgb((int)(color - (Dec * (dataGridView.Rows[i] as Row).Depth)));
             }
         }
 
-        private class MetaGridViewEnumRow : MetaGridViewRow
+        void dataGridView_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
-            public MetaGridViewEnumRow()
-                : base()
+
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (treeView1.SelectedNode is TagHeaderTreeNode)
             {
-                Cells[2] = new MetaGridViewEnumComboBoxCell();
+                dataGridView.Rows.Clear();
+                dataGridView.Rows.AddRange(LoadRows((treeView1.SelectedNode as TagHeaderTreeNode).Values));
+                LoadValues((treeView1.SelectedNode as TagHeaderTreeNode).TagBlock, 0, dataGridView.Rows.Count);
+            }
+            else if (treeView1.SelectedNode is TagStructArrayTreeNode)
+            {
+                dataGridView.Rows.Clear();
+                dataGridView.Rows.AddRange(LoadRows((treeView1.SelectedNode as TagStructArrayTreeNode).Values));
+                LoadValues((treeView1.SelectedNode.FirstNode as TagStructTreeNode).TagBlock, 0, dataGridView.Rows.Count);
+            }
+            else if (treeView1.SelectedNode is TagStructTreeNode)
+            {
+                dataGridView.Rows.Clear();
+                dataGridView.Rows.AddRange(LoadRows((treeView1.SelectedNode.Parent as TagStructArrayTreeNode).Values));
+                LoadValues((treeView1.SelectedNode as TagStructTreeNode).TagBlock, 0, dataGridView.Rows.Count);
             }
         }
 
-        private class MetaGridViewEnumComboBoxCell : DataGridViewComboBoxCell
+        private void dataGridView_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
-            List<int> Values;
-            List<string> Names;
-
-            public MetaGridViewEnumComboBoxCell()
-                : base()
+            if (e.ColumnIndex == 2)
             {
-                Values = new List<int>();
-                Names = new List<string>();
+                dataGridView.BeginEdit(false);
             }
+            if (dataGridView.Rows[e.RowIndex] is TagDialogRow) { MessageBox.Show("Choose"); }
+        }
+    }
 
-            public void SetCellValueFromEnumValue(int value)
-            {
-                int index = Values.IndexOf(value);
-                if (index == -1)
-                {
-                    AddEnumOption(value.ToString(), value);
-                    index = Values.Count - 1;
-                }
-                this.Value = Names[index];
-            }
+    class TagHeaderTreeNode : TreeNode
+    {
+        public TagBlock TagBlock;
+        public XmlNode Values;
+        public TagHeaderTreeNode(string name, XmlNode node, TagBlock tagblock)
+            : base(name)
+        {
+            Values = node;
+            TagBlock = tagblock;
+        }
+    }
 
-            public void AddEnumOption(string name, int value)
-            {
-                Values.Add(value);
-                Names.Add(name);
-                Items.Add(name);
-            }
+    class TagStructArrayTreeNode : TreeNode
+    {
+        public XmlNode Values;
+        public TagStructArrayTreeNode(string name, XmlNode node) : base(name) { Values = node; }
+    }
+
+    class TagStructTreeNode : TreeNode
+    {
+        public TagBlock TagBlock;
+        public TagStructTreeNode(string name, TagBlock tagblock) : base(name) { TagBlock = tagblock; }
+    }
+
+    class EnumRow : Row
+    {
+        public EnumRow()
+            : base()
+        {
+            Cells[2] = new ComboBoxCell();
+        }
+    }
+
+    class ComboBoxCell : DataGridViewComboBoxCell
+    {
+        List<int> Values;
+        List<string> Names;
+
+        public ComboBoxCell()
+            : base()
+        {
+            Values = new List<int>();
+            Names = new List<string>();
         }
 
-        private class MetaGridViewTagBlockRow : MetaGridViewRow
+        public void SetCellValueFromEnumValue(int value)
         {
-            public TagBlockArray tagBlockArray;
-            public int Length;
-
-            public MetaGridViewTagBlockRow()
-                : base()
+            int index = Values.IndexOf(value);
+            if (index == -1)
             {
-                Cells[2] = new DataGridViewComboBoxCell();
-                (Cells[2] as DataGridViewComboBoxCell).DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox;
+                AddEnumOption(value.ToString(), value);
+                index = Values.Count - 1;
             }
+            this.Value = Names[index];
         }
 
-        private class MetaGridViewRow : DataGridViewRow
+        public void AddEnumOption(string name, int value)
         {
-            public MetaGridViewRow()
-            {
-                Cells.AddRange(new DataGridViewCell[]{
+            Values.Add(value);
+            Names.Add(name);
+            Items.Add(name);
+        }
+    }
+
+    class TagDialogRow : TextBoxRow
+    {
+        public string Value { get { return this.Cells[2].Value.ToString(); } set { this.Cells[2].Value = value; } }
+
+        public TagDialogRow(string name, int offset, int depth)
+            : base(name, typeof(object), offset, depth) { }
+    }
+
+    class StringIdRow : TextBoxRow
+    {
+        public string Value { get { return this.Cells[2].Value.ToString(); } set { this.Cells[2].Value = value; } }
+
+        public StringIdRow(string name, int offset, int depth)
+            : base(name, typeof(Sunfish.ValueTypes.StringId), offset, depth) { }
+    }
+
+    class StringRow : TextBoxRow
+    {
+        public int Length;
+        public Encoding Encoding;
+
+        public StringRow(string name, int offset, int depth, int length, Encoding encoding)
+            : base(name, typeof(string), offset, depth)
+        {
+            Length = length;
+            Encoding = encoding;
+        }
+    }
+
+    class TextBoxRow : Row
+    {
+        public TextBoxRow(string name, Type valuetype, int offset, int depth)
+            : base(offset, depth)
+        {
+            Cells[0].Value = name;
+            Cells[0].ReadOnly = true;
+            Cells[1].Value = valuetype;
+            Cells[1].ReadOnly = true;
+            Cells[2].ValueType = valuetype;
+            Cells[2].ReadOnly = false;
+        }
+    }
+
+    class Row : DataGridViewRow
+    {
+        public byte[] Data;
+        public int Offset;
+        public int Depth;
+        public Row()
+        {
+            Cells.AddRange(new DataGridViewCell[]{
                     new DataGridViewTextBoxCell(),
                     new DataGridViewTextBoxCell(),
                     new DataGridViewTextBoxCell(),
-                    new DataGridViewTextBoxCell(),
-                    new DataGridViewTextBoxCell(),});
-            }
+                });
+        }
+
+        public Row(int offset, int depth)
+            : this()
+        {
+            Offset = offset;
+            Depth = depth;
         }
     }
 }

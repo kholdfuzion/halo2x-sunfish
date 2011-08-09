@@ -1,48 +1,1493 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<tag>
-  <unused count="16"/>
-  <enum16 name="Map Type">
-    <option name="Campaign"/>
-    <option name="Multiplayer"/>
-    <option name="Mainmenu"/>
-    <option name="Shared"/>
-    <option name="Campaign Shared"/>
-  </enum16>
-  <short name="Local North"/>
-  <unused count="788"/>
-  <tagblock name="Obstacle Placements">
-    <short name="Type"/>
-    <short name="Name"/>
-    <int name="Placement Flags"/>
-    <float name="Position X"/>
-    <float name="Position Y"/>
-    <float name="Position Z"/>
-    <float name="Rotation Yaw"/>
-    <float name="Rotation Pitch"/>
-    <float name="Rotation Roll"/>
-    <float name="Scale"/>
-    <unused count="2"/>
-    <short name="Manual BSP Flags"/>
-    <int name="Unique ID"/>
-    <short name="Origin BSP"/>
-    <short name="Type"/>
-    <short name="Source"/>
-    <short name="BSP Policy"/>
-    <stringid name="Variant Name"/>
-    <short name="Editor Folder"/>
-    <unused count="4"/>
-    <short name="Active Change Colors"/>
-    <byte name="Primary Color R"/>
-    <byte name="Primary Color G"/>
-    <byte name="Primary Color B"/>
-    <byte name="Secondary Color R"/>
-    <byte name="Secondary Color G"/>
-    <byte name="Secondary Color B"/>
-    <byte name="Tertiary Color R"/>
-    <byte name="Tertiary Color G"/>
-    <byte name="Tertiary Color B"/>
-    <byte name="Quaternary Color R"/>
-    <byte name="Quaternary Color G"/>
-    <byte name="Quaternary Color B"/>
-  </tagblock>
-</tag>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<plugin version="1.0.0">
+  <valuetype-definitions>
+    <byte type="System.Byte, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <sbyte type="System.SByte, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <short type="System.Int16, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ushort type="System.UInt16, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <int type="System.Int32, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <uint type="System.UInt32, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <float type="System.Single, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <tagstruct type="Sunfish.ValueTypes.TagBlockPointer, Sunfish, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null" />
+    <tagindex type="Sunfish.ValueTypes.TagIndex, Sunfish, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null" />
+    <tagtype type="Sunfish.ValueTypes.TagType, Sunfish, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null" />
+    <stringid type="Sunfish.ValueTypes.StringId, Sunfish, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null" />
+    <string type="System.Char[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </valuetype-definitions>
+  <tag-definition class="scnr">
+    <int name="lone SBSP class" />
+    <int name="unused SBSP ID? [Constant: 0xFFFFFFFF]" />
+    <tagblock name="Skies">
+      <taginstance name="Sky" />
+    </tagblock>
+    <enum base="short" name="Map Type">
+      <option name="Single Player" value="0" />
+      <option name="Multiplayer" value="1" />
+      <option name="Main Menu" value="2" />
+      <option name="Shared" value="3" />
+      <option name="Single Player Shared" value="4" />
+    </enum>
+    <short name="Unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <tagblock name="Predicted Resources">
+      <int name="Bitmap Index" />
+      <tagindex name="Bitmap" />
+    </tagblock>
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <tagblock name="Script Objects">
+      <string byte-length="32" encoding="utf-8" name="Object Name" />
+      <enum base="short" name="Type">
+        <option name="Biped" value="0" />
+        <option name="Vehicle" value="1" />
+        <option name="Weapon" value="2" />
+        <option name="Scenery" value="6" />
+        <option name="Machine" value="7" />
+        <option name="Control" value="8" />
+        <option name="Sound Scenery" value="10" />
+        <option name="Obstacle" value="11" />
+      </enum>
+      <short name="Placement  Index" />
+    </tagblock>
+    <tagblock name="Scenery Placement">
+      <short name="Scenery Chunk #" />
+      <short name="Script Object Chunk #" />
+      <flags base="byte" name="Script object spawn setting">
+        <option name="Does not Initially Spawn" value="0" />
+        <option name="-1-" value="1" />
+        <option name="-2-" value="2" />
+        <option name="-3-" value="3" />
+        <option name="-4-" value="4" />
+        <option name="-5-" value="5" />
+        <option name="-6-" value="6" />
+        <option name="-7-" value="7" />
+      </flags>
+      <flags base="byte" name="005">
+        <option name="-?-" value="0" />
+        <option name="-?- Something used...." value="1" />
+        <option name="-2-" value="2" />
+        <option name="-3-" value="3" />
+        <option name="-4-" value="4" />
+        <option name="-5-" value="5" />
+        <option name="-6-" value="6" />
+        <option name="-7-" value="7" />
+      </flags>
+      <enum base="byte" name="006">
+        <option name="-?-" value="0" />
+      </enum>
+      <enum base="byte" name="007">
+        <option name="-?-" value="0" />
+      </enum>
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <float name="Scale" />
+      <enum base="int" name="Manual BSP Flags">
+        <option name="-0-" value="0" />
+      </enum>
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <short name="Origin BSP (always 0 for MP maps)" />
+      <enum base="byte" name="Type">
+        <option name="Biped" value="0" />
+        <option name="Vehicle" value="1" />
+        <option name="Weapon" value="2" />
+        <option name="Scenery" value="6" />
+        <option name="Machine" value="7" />
+        <option name="Control" value="8" />
+        <option name="Sound Scenery" value="10" />
+        <option name="Obstacle" value="11" />
+      </enum>
+      <enum base="byte" name="Source">
+        <option name="IDFK" value="0" />
+        <option name="Editor" value="1" />
+      </enum>
+      <enum base="short" name="BSP Policy">
+        <option name="Default" value="0" />
+        <option name="Always Places" value="1" />
+        <option name="Manual BSP Placement" value="2" />
+      </enum>
+      <enum base="short" name="Editor Folder (likely not used)" />
+      <stringid name="Variation" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <short name="Unknown" />
+      <flags base="short" name="Spawns in (none means all)">
+        <option name="CTF" value="0" />
+        <option name="Slayer" value="1" />
+        <option name="Oddball" value="2" />
+        <option name="KOTH" value="3" />
+        <option name="Juggernaut" value="4" />
+        <option name="Territories" value="5" />
+        <option name="Assault" value="6" />
+      </flags>
+    </tagblock>
+    <tagblock name="Scenery Palette">
+      <taginstance name="Scenery" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Biped Placement">
+      <short name="Biped Chunk #" />
+      <short name="unknown" />
+      <int name="Unknown" />
+      <float name="X" />
+      <float name="Y" />
+      <float name="Z" />
+      <float name="Facing Direction" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <int name="unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <stringid name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="unknown" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="Biped Palette">
+      <taginstance name="Biped" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Vehicle Placement">
+      <short name="Vehicle Chunk #" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <short name="unknown" />
+    </tagblock>
+    <tagblock name="Vehicle Palette">
+      <taginstance name="Vehicle" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Equipment Placement">
+      <short name="Equipment Chunk #" />
+      <short name="unknown" />
+      <int name="Unknown" />
+      <float name="X" />
+      <float name="Y" />
+      <float name="Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="Equipment Palette">
+      <taginstance name="Equipment" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Weapon Placement">
+      <short name="Palette Chunk #" />
+      <unused length="2" />
+      <int name="Unknown" />
+      <float name="X" />
+      <int name="Y" />
+      <int name="Z" />
+      <int name="Yaw" />
+      <int name="Pitch" />
+      <int name="Roll" />
+      <float name="Unknown" />
+      <unused length="4" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <unused length="24" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="Weapon Palette">
+      <taginstance name="Weapon" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Device Groups">
+      <string byte-length="32" encoding="utf-8" name="Device" />
+      <float name="Initial Device Position" />
+      <enum base="int" name="Only Use Once">
+        <option name="False" value="0" />
+        <option name="True" value="1" />
+      </enum>
+    </tagblock>
+    <tagblock name="Machine Placement">
+      <short name="Palette Chunk #" />
+      <short name="Script Object Chunk #" />
+      <flags base="byte" name="Script object spawn setting">
+        <option name="Does not Initially Spawn" value="0" />
+        <option name="Not On Easy" value="1" />
+        <option name="Not On Normal" value="2" />
+        <option name="Not On Hard" value="3" />
+        <option name="Lock Type To Env Object" value="4" />
+        <option name="Lock Transform To Env Object" value="5" />
+        <option name="Never Placed" value="6" />
+        <option name="Lock Name to Env Object" value="7" />
+      </flags>
+      <flags base="byte" name="005">
+        <option name="Create At Rest" value="0" />
+        <option name="-?- Something used...." value="1" />
+      </flags>
+      <enum base="byte" name="006">
+        <option name="-?-" value="0" />
+      </enum>
+      <enum base="byte" name="007">
+        <option name="-?-" value="0" />
+      </enum>
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <float name="Scale" />
+      <enum base="int" name="Manual BSP Flags" />
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <byte name="Unique ID" />
+      <short name="Origin BSP (always 0 for MP maps)" />
+      <enum base="byte" name="Type">
+        <option name="Biped" value="0" />
+        <option name="Vehicle" value="1" />
+        <option name="Weapon" value="2" />
+        <option name="Scenery" value="6" />
+        <option name="Machine" value="7" />
+        <option name="Control" value="8" />
+        <option name="Sound Scenery" value="10" />
+        <option name="Obstacle" value="11" />
+      </enum>
+      <enum base="byte" name="Source">
+        <option name="IDFK" value="0" />
+        <option name="Editor" value="1" />
+      </enum>
+      <enum base="short" name="BSP Policy">
+        <option name="Default" value="0" />
+        <option name="Always Places" value="1" />
+        <option name="Manual BSP Placement" value="2" />
+      </enum>
+      <enum base="short" name="Editor Folder (likely not used)" />
+      <enum base="short" name="Machine Can Animate?">
+        <option name="Can Animated" value="0" />
+        <option name="Cannot Animated(locked)" value="-1" />
+      </enum>
+      <short name="Power (Device) Group Chunk #" />
+      <short name="Position Group Chunk #" />
+      <flags base="short" name="Flags">
+        <option name="Initially Open" value="0" />
+        <option name="Initially Off" value="1" />
+        <option name="Can Change Only Once" value="2" />
+        <option name="Position Reversed" value="3" />
+        <option name="Not Usable From Any Side" value="4" />
+      </flags>
+      <flags base="int" name="Flags">
+        <option name="Does Not Operate Automatically" value="0" />
+        <option name="One-Sided" value="1" />
+        <option name="Never Appears Locked" value="2" />
+        <option name="Opened By Melee Attack" value="3" />
+        <option name="One-Sided For Player" value="4" />
+        <option name="Does Not Close Automatically" value="5" />
+      </flags>
+      <tagblock name="Pathfinding References">
+        <short name="BSP Index" />
+        <short name="Pathfinding Object Index" />
+      </tagblock>
+    </tagblock>
+    <tagblock name="Machine Palette">
+      <taginstance name="Machine" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Control Placement">
+      <short name="Palette Chunk #" />
+      <short name="Name" />
+      <flags base="int" name="Placement Flags">
+        <option name="Not Automatically" value="0" />
+        <option name="Unused" value="1" />
+        <option name="Unused" value="2" />
+        <option name="Unused" value="3" />
+        <option name="Lock Type To Env Object" value="4" />
+        <option name="Lock Transform To Env Object" value="5" />
+        <option name="Never Placed" value="6" />
+        <option name="Lock Name to Env Object" value="7" />
+        <option name="Create At Rest" value="8" />
+      </flags>
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+      <short name="# BSP Loading" />
+      <short name="unknown" />
+      <float name="Unknown" />
+      <short name="Unknown" />
+      <short name="Device Group Chunk #" />
+      <unused length="4" />
+      <unused length="4" />
+      <unused length="4" />
+    </tagblock>
+    <tagblock name="Control Palette">
+      <taginstance name="Control" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <unused length="16" />
+    <tagblock name="Sound Scenery Placement">
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <unused length="8" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+    </tagblock>
+    <tagblock name="Sound Scenery Palette">
+      <taginstance name="Sound Scenery" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Light Placement">
+      <short name="Light Chunk #" />
+      <unused length="6" />
+      <float name="X" />
+      <float name="Y" />
+      <float name="Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <unused length="12" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <unused length="4" />
+      <unused length="4" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <unused length="4" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+    </tagblock>
+    <tagblock name="Light Palette">
+      <taginstance name="Light" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <tagblock name="Profiles">
+      <string byte-length="32" encoding="utf-8" name="Profile Name" />
+      <float name="Health Modifier" />
+      <float name="Shield Modifier" />
+      <taginstance name="Primary Weapon" />
+      <unused length="4" />
+      <taginstance name="Secondary Weapon" />
+      <unused length="4" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="Player Starting Locations">
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Facing Degrees" />
+      <enum base="short" name="Team Designator">
+        <option name="Red" value="0" />
+        <option name="Blue" value="1" />
+        <option name="Yellow" value="2" />
+        <option name="Green" value="3" />
+        <option name="Purple" value="4" />
+        <option name="Orange" value="5" />
+        <option name="Brown" value="6" />
+        <option name="Pink" value="7" />
+        <option name="Neutral" value="8" />
+      </enum>
+      <short name="BSP Index" />
+      <enum base="short" name="Game Type 1">
+        <option name="None" value="0" />
+        <option name="Capture The Flag" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="King Of The Hill" value="4" />
+        <option name="Race" value="5" />
+        <option name="Juggernaught" value="6" />
+        <option name="Territories" value="7" />
+        <option name="Assault" value="8" />
+        <option name="" value="9" />
+        <option name="" value="10" />
+        <option name="All Game Types" value="11" />
+        <option name="All Except CTF" value="12" />
+      </enum>
+      <enum base="short" name="Game Type 2">
+        <option name="None" value="0" />
+        <option name="Capture The Flag" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="King Of The Hill" value="4" />
+        <option name="Race" value="5" />
+        <option name="Juggernaught" value="6" />
+        <option name="Territories" value="7" />
+        <option name="Assault" value="8" />
+        <option name="" value="9" />
+        <option name="" value="10" />
+        <option name="All Game Types" value="11" />
+        <option name="All Except CTF" value="12" />
+      </enum>
+      <enum base="short" name="Game Type 3">
+        <option name="None" value="0" />
+        <option name="Capture The Flag" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="King Of The Hill" value="4" />
+        <option name="Race" value="5" />
+        <option name="Juggernaught" value="6" />
+        <option name="Territories" value="7" />
+        <option name="Assault" value="8" />
+        <option name="" value="9" />
+        <option name="" value="10" />
+        <option name="All Game Types" value="11" />
+        <option name="All Except CTF" value="12" />
+      </enum>
+      <enum base="short" name="Game Type 4">
+        <option name="None" value="0" />
+        <option name="Capture The Flag" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="King Of The Hill" value="4" />
+        <option name="Race" value="5" />
+        <option name="Juggernaught" value="6" />
+        <option name="Territories" value="7" />
+        <option name="Assault" value="8" />
+        <option name="" value="9" />
+        <option name="" value="10" />
+        <option name="All Game Types" value="11" />
+        <option name="All Except CTF" value="12" />
+      </enum>
+      <enum base="short" name="Spawn Type 1">
+        <option name="Both" value="0" />
+        <option name="Initial Only" value="1" />
+        <option name="Respawn Only" value="2" />
+      </enum>
+      <enum base="short" name="Spawn Type 2">
+        <option name="Both" value="0" />
+        <option name="Initial Only" value="1" />
+        <option name="Respawn Only" value="2" />
+      </enum>
+      <enum base="short" name="Spawn Type 3">
+        <option name="Both" value="0" />
+        <option name="Initial Only" value="1" />
+        <option name="Respawn Only" value="2" />
+      </enum>
+      <enum base="short" name="Spawn Type 4">
+        <option name="Both" value="0" />
+        <option name="Initial Only" value="1" />
+        <option name="Respawn Only" value="2" />
+      </enum>
+      <unused length="8" />
+      <enum base="short" name="Campaign Player Type">
+        <option name="Type0 Masterchief" value="0" />
+        <option name="Type1 Dervish" value="1" />
+        <option name="Type2 Chief Multiplayer" value="2" />
+        <option name="Type3 Elite Multiplayer" value="3" />
+      </enum>
+      <unused length="6" />
+    </tagblock>
+    <tagblock name="Death Zones">
+      <stringid name="Name" />
+      <short name="Unknown" />
+      <short name="Unknown" />
+      <unused length="4" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Length (X)" />
+      <float name="Width (Y)" />
+      <float name="Thickness" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+    </tagblock>
+    <unused length="8" />
+    <tagblock name="Objective Locations">
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Rotation" />
+      <enum base="short" name="Type">
+        <option name="CTF Respawn" value="0" />
+        <option name="CTF Score" value="1" />
+        <option name="Assault Respawn" value="2" />
+        <option name="Arming Circle" value="3" />
+        <option name="Oddball Spawn" value="4" />
+        <option name="Teleporter Entrance" value="7" />
+        <option name="Teleporter Exit" value="8" />
+        <option name="Territory" value="10" />
+        <option name="Main Hill vertex" value="11" />
+        <option name="Hill 2 vertex" value="12" />
+        <option name="Hill 3 vertex" value="13" />
+        <option name="Hill 4 vertex" value="14" />
+        <option name="Hill 5 vertex" value="15" />
+      </enum>
+      <enum base="short" name="Team">
+        <option name="Red/Defense/None" value="0" />
+        <option name="Blue/Offense" value="1" />
+        <option name="Neutral" value="8" />
+      </enum>
+      <short name="#" />
+      <short name="Unknown" />
+      <unused length="8" />
+    </tagblock>
+    <tagblock name="Netgame Equipment">
+      <enum base="int" name="Floating">
+        <option name="False" value="0" />
+        <option name="True" value="1" />
+        <option name="Vehicle/ammo" value="2" />
+        <option name="Unknown" value="3" />
+      </enum>
+      <enum base="int" name="Spawns in KOTH +">
+        <option name="None" value="0" />
+        <option name="CTF/Assault" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="Just KOTH" value="4" />
+        <option name="Unknown (just KOTH)" value="5" />
+        <option name="Unknown (just KOTH)" value="6" />
+        <option name="Juggernaut" value="7" />
+        <option name="Territories" value="8" />
+        <option name="CTF/Assault (again)" value="9" />
+        <option name="Unknown (just KOTH)" value="10" />
+        <option name="Unknown (just KOTH)" value="11" />
+        <option name="All" value="12" />
+        <option name="All except CTF/Assault" value="13" />
+        <option name="All except CTF/Assault" value="14" />
+      </enum>
+      <unused length="4" />
+      <short name="Unused" />
+      <short name="Respawn Time" />
+      <short name="Respawn 2" />
+      <short name="Max on Map" />
+      <enum base="int" name="Classifier">
+        <option name="Weapon" value="0" />
+        <option name="Primary Light" value="1" />
+        <option name="Secondary Light" value="2" />
+        <option name="Primary Heavy" value="3" />
+        <option name="Banshee" value="4" />
+        <option name="Seconary Heavy" value="5" />
+        <option name="Primary Turret" value="6" />
+        <option name="Secondary Turret" value="7" />
+        <option name="Grenade" value="8" />
+        <option name="Powerup" value="9" />
+      </enum>
+      <unused length="40" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <taginstance name="Collection" />
+      <unused length="48" />
+    </tagblock>
+    <tagblock name="Starting Equipment">
+      <enum base="int" name="Starting Grenades">
+        <option name="Frags" value="0" />
+        <option name="None" value="1" />
+        <option name="Plasmas" value="2" />
+      </enum>
+      <enum base="int" name="Spawns in KOTH +">
+        <option name="None" value="0" />
+        <option name="CTF/Assault" value="1" />
+        <option name="Slayer" value="2" />
+        <option name="Oddball" value="3" />
+        <option name="Just KOTH" value="4" />
+        <option name="Unknown (just KOTH)" value="5" />
+        <option name="Unknown (just KOTH)" value="6" />
+        <option name="Juggernaut" value="7" />
+        <option name="Territories" value="8" />
+        <option name="CTF/Assault (again)" value="9" />
+        <option name="Unknown (just KOTH)" value="10" />
+        <option name="Unknown (just KOTH)" value="11" />
+        <option name="All" value="12" />
+        <option name="All except CTF/Assault" value="13" />
+        <option name="All except CTF/Assault" value="14" />
+      </enum>
+      <unused length="52" />
+      <taginstance name="Primary Weap" />
+      <taginstance name="Secondary Weap" />
+      <taginstance name="Unused" />
+      <taginstance name="Unused" />
+      <taginstance name="Unused" />
+      <taginstance name="Unused" />
+      <unused length="48" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+      <byte name="Unknown" />
+    </tagblock>
+    <tagblock name="Decal Placement">
+      <short name="Palette Chunk #" />
+      <unused length="2" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+    </tagblock>
+    <tagblock name="Decal Palette">
+      <taginstance name="Decal" />
+    </tagblock>
+    <unused length="8" />
+    <tagblock name="Style Palette">
+      <taginstance name="Style" />
+    </tagblock>
+    <tagblock name="AI Squad Types">
+      <string byte-length="32" encoding="utf-8" name="Squad Type" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="AI Squads">
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <flags base="int" name="Flags?" />
+      <short name="Unknown" />
+      <short name="Platoons Index" />
+      <short name="Unknown" />
+      <short name="Unknown" />
+      <short name="# of AI that spawn on Easy" />
+      <short name="# of AI that spawn on Legendary" />
+      <short name="Unknown" />
+      <short name="Unknown" />
+      <short name="Vehicle Pallette Index" />
+      <short name="Character Pallette Index" />
+      <short name="Unknown" />
+      <short name="Unknown" />
+      <short name="(Primary) Weapon Pallette Index" />
+      <short name="(Secondary) Weapon Pallette Index" />
+      <enum base="short" name="Grenade Type">
+        <option name="None" value="0" />
+        <option name="Frag" value="1" />
+        <option name="Plasma" value="2" />
+      </enum>
+      <short name="AI Orders Index" />
+      <short name="AI Orders Index" />
+      <short name="AI Orders Index" />
+      <tagblock name="Starting Loctations417">
+        <stringid name="Unknown" />
+        <float name="X" />
+        <float name="Y" />
+        <float name="Z" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <unused length="4" />
+        <stringid name="Unknown" />
+        <unused length="8" />
+        <int name="Unknown" />
+        <string byte-length="32" encoding="utf-8" name="Unknown" />
+        <short name="(440)index" />
+        <short name="unknown" />
+      </tagblock>
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <short name="Unknown" />
+      <short name="Unknown" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+      </tagblock>
+      <tagblock name="Unknown">
+        <string byte-length="32" encoding="utf-8" name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <unused length="48" />
+        <tagblock name="Unknown">
+          <int name="Unknown" />
+        </tagblock>
+      </tagblock>
+    </tagblock>
+    <tagblock name="Unknown">
+      <stringid name="Unknown" />
+      <unused length="4" />
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <tagblock name="Unknown">
+          <int name="Unknown" />
+          <int name="Unknown" />
+        </tagblock>
+      </tagblock>
+      <tagblock name="Unknown">
+        <stringid name="Unknown" />
+        <unused length="4" />
+        <tagblock name="Unknown">
+          <stringid name="Unknown" />
+        </tagblock>
+      </tagblock>
+    </tagblock>
+    <tagblock name="Characters">
+      <taginstance name="Character" />
+    </tagblock>
+    <unused length="48" />
+    <tagblock name="Script Data">
+      <byte name="Character" />
+    </tagblock>
+    <tagblock name="Scripts">
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <enum base="short" name="Script Type">
+        <option name="Startup" value="0" />
+        <option name="Dormant" value="1" />
+        <option name="Continuous" value="2" />
+        <option name="Static" value="3" />
+        <option name="Stub" value="4" />
+      </enum>
+      <enum base="short" name="Return Type">
+        <option name="Unparsed" value="0" />
+        <option name="Special Form" value="1" />
+        <option name="Function Name" value="2" />
+        <option name="Passthrough" value="3" />
+        <option name="Viod" value="4" />
+        <option name="Boolean" value="5" />
+        <option name="Real" value="6" />
+        <option name="Short" value="7" />
+        <option name="Long" value="8" />
+        <option name="String" value="9" />
+        <option name="Script" value="10" />
+        <option name="Trigger Volume" value="11" />
+        <option name="Cutscene Flag" value="12" />
+        <option name="Cutscene Camera Point" value="13" />
+        <option name="Cutscene Title" value="14" />
+        <option name="Cutscene Recording" value="15" />
+        <option name="Device Group" value="16" />
+        <option name="AI" value="17" />
+        <option name="AI Command List" value="18" />
+        <option name="Starting Profile" value="19" />
+        <option name="Conversation" value="20" />
+        <option name="Navpoint" value="21" />
+        <option name="Hud Message" value="22" />
+        <option name="Object List" value="23" />
+        <option name="Sound" value="24" />
+        <option name="Effect" value="25" />
+        <option name="Damage" value="26" />
+        <option name="Looping Sound" value="27" />
+        <option name="Animation Graph" value="28" />
+        <option name="Actor Variant" value="29" />
+        <option name="Dammge Effect" value="30" />
+        <option name="Object Definition" value="31" />
+        <option name="Game Difficulty" value="32" />
+        <option name="Team" value="33" />
+        <option name="AI Default State" value="34" />
+        <option name="Actor Type" value="35" />
+        <option name="Hud Corner" value="36" />
+        <option name="Object" value="37" />
+        <option name="Unit" value="38" />
+        <option name="Vehicle" value="39" />
+        <option name="Weapon" value="40" />
+        <option name="Device" value="41" />
+        <option name="Scenery" value="42" />
+        <option name="Object Name" value="43" />
+        <option name="Unit Name" value="44" />
+        <option name="Vehicle Name" value="45" />
+        <option name="Weapon Name" value="46" />
+        <option name="Device Name" value="47" />
+        <option name="Scenery Name" value="48" />
+      </enum>
+      <uint name="Root Expression Index" />
+    </tagblock>
+    <tagblock name="Globals">
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <enum base="short" name="Type">
+        <option name="Startup" value="0" />
+        <option name="Dormant" value="1" />
+        <option name="Continuous" value="2" />
+        <option name="Static" value="3" />
+        <option name="Stub" value="4" />
+      </enum>
+      <enum base="short" name="Return Type">
+        <option name="Unparsed" value="0" />
+        <option name="Special Form" value="1" />
+        <option name="Function Name" value="2" />
+        <option name="Passthrough" value="3" />
+        <option name="Viod" value="4" />
+        <option name="Boolean" value="5" />
+        <option name="Real" value="6" />
+        <option name="Short" value="7" />
+        <option name="Long" value="8" />
+        <option name="String" value="9" />
+        <option name="Script" value="10" />
+        <option name="Trigger Volume" value="11" />
+        <option name="Cutscene Flag" value="12" />
+        <option name="Cutscene Camera Point" value="13" />
+        <option name="Cutscene Title" value="14" />
+        <option name="Cutscene Recording" value="15" />
+        <option name="Device Group" value="16" />
+        <option name="AI" value="17" />
+        <option name="AI Command List" value="18" />
+        <option name="Starting Profile" value="19" />
+        <option name="Conversation" value="20" />
+        <option name="Navpoint" value="21" />
+        <option name="Hud Message" value="22" />
+        <option name="Object List" value="23" />
+        <option name="Sound" value="24" />
+        <option name="Effect" value="25" />
+        <option name="Damage" value="26" />
+        <option name="Looping Sound" value="27" />
+        <option name="Animation Graph" value="28" />
+        <option name="Actor Variant" value="29" />
+        <option name="Dammge Effect" value="30" />
+        <option name="Object Definition" value="31" />
+        <option name="Game Difficulty" value="32" />
+        <option name="Team" value="33" />
+        <option name="AI Default State" value="34" />
+        <option name="Actor Type" value="35" />
+        <option name="Hud Corner" value="36" />
+        <option name="Object" value="37" />
+        <option name="Unit" value="38" />
+        <option name="Vehicle" value="39" />
+        <option name="Weapon" value="40" />
+        <option name="Device" value="41" />
+        <option name="Scenery" value="42" />
+        <option name="Object Name" value="43" />
+        <option name="Unit Name" value="44" />
+        <option name="Vehicle Name" value="45" />
+        <option name="Weapon Name" value="46" />
+        <option name="Device Name" value="47" />
+        <option name="Scenery Name" value="48" />
+      </enum>
+      <uint name="Initialization Expression Index" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <taginstance name="Unknown" />
+    </tagblock>
+    <unused length="8" />
+    <tagblock name="Script Locations">
+      <tagblock name="Groups">
+        <string byte-length="32" encoding="utf-8" name="Group name" />
+        <tagblock name="Points">
+          <string byte-length="32" encoding="utf-8" name="Point name" />
+          <unused length="16" />
+          <float name="X" />
+          <float name="Y" />
+          <float name="Z" />
+          <int name="Unknown" />
+          <int name="Unknown" />
+          <int name="Unknown" />
+          <int name="Unknown" />
+        </tagblock>
+        <int name="Unknown" />
+        <unused length="4" />
+      </tagblock>
+      <unused length="120" />
+    </tagblock>
+    <tagblock name="Cutscene Flags">
+      <unused length="4" />
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Facing Y" />
+      <float name="Facing P" />
+    </tagblock>
+    <tagblock name="Cutscene Camera">
+      <unused length="4" />
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Orientation Y" />
+      <float name="Orientation P" />
+      <float name="Orientation R" />
+      <float name="Field of View" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <stringid name="Unknown" />
+      <int name="Name" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <unused length="4" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+    </tagblock>
+    <taginstance name="Unused" />
+    <taginstance name="Title" />
+    <taginstance name="Unused" />
+    <tagblock name="Structure BSPS">
+      <uint name="Structure BSP Offset" />
+      <uint name="Structure BSP Size" />
+      <uint name="Primary Magic Meta Offset" />
+      <unused length="4" />
+      <taginstance name="Structure BSP" />
+      <taginstance name="Light Map" />
+      <unused length="4" />
+      <float name="Unknown" />
+      <unused length="4" />
+      <flags base="short" name="Flags">
+        <option name="Default Sky Enabled" value="0" />
+      </flags>
+      <short name="Unknown" />
+      <float name="Unknown" />
+      <unused length="16" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+      </tagblock>
+      <tagblock name="Unused">
+        <taginstance name="Unused" />
+      </tagblock>
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+      </tagblock>
+    </tagblock>
+    <unused length="8" />
+    <tagblock name="Unknown">
+      <tagindex name="Unknown" />
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <int name="Unknown" />
+    </tagblock>
+    <tagblock name="The Sheep Herd Reflexive">
+      <short name="Shepherd [Constant Value 0x0000]" />
+      <short name="Sheep [Constant Value 0xBABA]" />
+      <int name="Sheep [Constant Value 0xBABABABA]" />
+      <int name="Sheep [Constant Value 0xBABABABA]" />
+      <int name="Sheep [Constant Value 0xBABABABA]" />
+      <int name="Sheep [Constant Value 0xBABABABA]" />
+    </tagblock>
+    <tagblock name="Unknown">
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+      </tagblock>
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+      </tagblock>
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <tagblock name="Unknown">
+          <int name="Unknown" />
+          <int name="Unknown" />
+        </tagblock>
+      </tagblock>
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+      </tagblock>
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <int name="Unknown" />
+        <tagblock name="Unknown">
+          <int name="Unknown" />
+          <int name="Unknown" />
+        </tagblock>
+      </tagblock>
+    </tagblock>
+    <tagblock name="Unknown">
+      <string byte-length="32" encoding="utf-8" name="Unknown" />
+      <int name="Unknown" />
+      <int name="Unknown" />
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <int name="Unknown" />
+        <string byte-length="32" encoding="utf-8" name="Unknown" />
+        <int name="Unknown" />
+        <unused length="4" />
+      </tagblock>
+    </tagblock>
+    <tagblock name="Ambient Sounds">
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <taginstance name="Looping Sound" />
+      <taginstance name="Unused" />
+      <unused length="20" />
+      <float name="Unknown" />
+      <int name="Unknown" />
+      <float name="Unknown" />
+      <unused length="8" />
+      <float name="Unknown" />
+      <unused length="8" />
+    </tagblock>
+    <tagblock name="Sound Environments">
+      <string byte-length="32" encoding="utf-8" name="Name" />
+      <taginstance name="Sound Environment" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="24" />
+    </tagblock>
+    <tagblock name="Weather">
+      <string byte-length="32" encoding="utf-8" name="Weather" />
+      <taginstance name="Weather" />
+      <unused length="36" />
+      <taginstance name="Unused" />
+      <unused length="52" />
+    </tagblock>
+    <unused length="40" />
+    <tagblock name="Scenario Cluster Data">
+      <int name="Lone Sbsp Class" />
+      <int name="Unused Sbsp ID [Constant Value: 0xFFFFFFFF]" />
+      <tagblock name="Background Sounds">
+        <enum base="int" name="Type" />
+      </tagblock>
+      <tagblock name="Sound Environments">
+        <enum base="int" name="Type" />
+      </tagblock>
+      <int name="BSP Checksum" />
+      <tagblock name="Cluster Centroids">
+        <float name="Centroid X" />
+        <float name="Centroid Y" />
+        <float name="Centroid Z" />
+      </tagblock>
+      <tagblock name="Weather Properties">
+        <enum base="int" name="Type" />
+      </tagblock>
+      <tagblock name="Atmospheric Fog Properties">
+        <enum base="int" name="Type" />
+      </tagblock>
+    </tagblock>
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <unused length="8" />
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <unused length="4" />
+    <int name="Unknown" />
+    <int name="Unknown" />
+    <unused length="80" />
+    <tagblock name="Spawn Data">
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Objective Respawn Z" />
+      <unused length="60" />
+      <tagblock name="Unknown">
+        <int name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+      </tagblock>
+      <tagblock name="CTF Respawns">
+        <stringid name="Condition" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <float name="Position X" />
+        <float name="Position Y" />
+        <float name="Position Z" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Width" />
+        <float name="Length" />
+        <float name="Thickness" />
+      </tagblock>
+      <tagblock name="Initial Spawns">
+        <stringid name="Condition" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <unused length="4" />
+        <float name="Position X" />
+        <float name="Position Y" />
+        <float name="Position Z" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+      </tagblock>
+    </tagblock>
+    <taginstance name="Unused" />
+    <tagblock name="Obstacle Placement">
+      <short name="Palette Chunk #" />
+      <short name="Script Object Chunk #" />
+      <flags base="byte" name="Script object spawn setting">
+        <option name="-0-" value="0" />
+        <option name="Does not Initially Spawn" value="1" />
+        <option name="-2-" value="2" />
+        <option name="-3-" value="3" />
+        <option name="-4-" value="4" />
+        <option name="-5-" value="5" />
+        <option name="-6-" value="6" />
+        <option name="-7-" value="7" />
+      </flags>
+      <flags base="byte" name="005">
+        <option name="-?- Random Spawn Potential?" value="0" />
+        <option name="-?- Something used...." value="1" />
+        <option name="-2-" value="2" />
+        <option name="-3-" value="3" />
+        <option name="-4-" value="4" />
+        <option name="-5-" value="5" />
+        <option name="-6-" value="6" />
+        <option name="-7-" value="7" />
+      </flags>
+      <enum base="byte" name="006">
+        <option name="-?-" value="0" />
+      </enum>
+      <enum base="byte" name="007">
+        <option name="-?-" value="0" />
+      </enum>
+      <float name="Position X" />
+      <float name="Position Y" />
+      <float name="Position Z" />
+      <float name="Yaw" />
+      <float name="Pitch" />
+      <float name="Roll" />
+      <float name="Scale" />
+      <float name="Manual BSP Flags" />
+      <int name="Unique ID" />
+      <short name="Origin BSP (always 0 for MP maps)" />
+      <enum base="byte" name="Type">
+        <option name="Biped" value="0" />
+        <option name="Vehicle" value="1" />
+        <option name="Weapon" value="2" />
+        <option name="Scenery" value="6" />
+        <option name="Machine" value="7" />
+        <option name="Control" value="8" />
+        <option name="Sound Scenery" value="10" />
+        <option name="Obstacle" value="11" />
+      </enum>
+      <enum base="byte" name="Source">
+        <option name="IDFK" value="0" />
+        <option name="Editor" value="1" />
+      </enum>
+      <enum base="short" name="BSP Policy">
+        <option name="Default" value="0" />
+        <option name="Always Places" value="1" />
+        <option name="Manual BSP Placement" value="2" />
+      </enum>
+      <enum base="short" name="Editor Folder (likely not used)" />
+      <stringid name="Model Variation" />
+      <int name="Offset 56" />
+      <int name="Offset 60" />
+      <int name="Offset 64" />
+      <int name="Offset 68" />
+      <int name="Offset 72" />
+    </tagblock>
+    <tagblock name="Obstacle Palette">
+      <taginstance name="Obstacle" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+      <int name="unknown" />
+    </tagblock>
+    <taginstance name="Global Lighting Override" />
+    <tagblock name="Atmospheric Fog Palette">
+      <stringid name="Name" />
+      <float name="Colour R" />
+      <float name="Colour G" />
+      <float name="Colour B" />
+      <unused length="8" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="4" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="72" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="12" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="32" />
+      <taginstance name="Unknown" />
+      <unused length="8" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <float name="Unknown" />
+      <unused length="4" />
+    </tagblock>
+    <tagblock name="Planar Fog Palette">
+      <stringid name="Fog Name" />
+      <taginstance name="Fog" />
+      <int name="Fog Position" />
+    </tagblock>
+    <unused length="8" />
+    <taginstance name="Subtitles" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <int name="unknown" />
+    <tagblock name="Decorators">
+      <taginstance name="Decorator" />
+    </tagblock>
+    <int name="unknown" />
+    <int name="unknown" />
+    <tagblock name="Resource Something">
+      <int name="Lone SBSP Class" />
+      <int name="Unused SBSP ID [Constant Value: 0xFFFF]" />
+      <tagblock name="Unknown">
+        <float name="Unknown" />
+        <float name="Unknown" />
+        <float name="Unknown" />
+      </tagblock>
+    </tagblock>
+    <int name="unknown" />
+    <int name="unknown" />
+    <tagblock name="Map Description">
+      <taginstance name="Map Description" />
+      <tagblock name="Single Player">
+        <int name="Unknown" />
+        <int name="Map ID" />
+        <taginstance name="Preview Image" />
+        <string byte-length="64" encoding="utf-16" name="English Name" />
+        <string byte-length="64" encoding="utf-16" name="Japanese Name" />
+        <string byte-length="64" encoding="utf-16" name="German Name" />
+        <string byte-length="64" encoding="utf-16" name="French Name" />
+        <string byte-length="64" encoding="utf-16" name="Spanish Name" />
+        <string byte-length="64" encoding="utf-16" name="Italian Name" />
+        <string byte-length="64" encoding="utf-16" name="Korean Name" />
+        <string byte-length="64" encoding="utf-16" name="Chinese Name" />
+        <string byte-length="64" encoding="utf-16" name="Portuguese Name" />
+        <string byte-length="256" encoding="utf-16" name="English Description" />
+        <string byte-length="256" encoding="utf-16" name="Japanese Description" />
+        <string byte-length="256" encoding="utf-16" name="German Description" />
+        <string byte-length="256" encoding="utf-16" name="French Description" />
+        <string byte-length="256" encoding="utf-16" name="Spanish Description" />
+        <string byte-length="256" encoding="utf-16" name="Italian Description" />
+        <string byte-length="256" encoding="utf-16" name="Korean Description" />
+        <string byte-length="256" encoding="utf-16" name="Chinese Description" />
+        <string byte-length="256" encoding="utf-16" name="Portuguese Description" />
+      </tagblock>
+      <tagblock name="Multiplayer">
+        <int name="Map ID" />
+        <taginstance name="Preview Image" />
+        <string byte-length="64" encoding="utf-16" name="English Name" />
+        <string byte-length="64" encoding="utf-16" name="Japanese Name" />
+        <string byte-length="64" encoding="utf-16" name="German Name" />
+        <string byte-length="64" encoding="utf-16" name="French Name" />
+        <string byte-length="64" encoding="utf-16" name="Spanish Name" />
+        <string byte-length="64" encoding="utf-16" name="Italian Name" />
+        <string byte-length="64" encoding="utf-16" name="Korean Name" />
+        <string byte-length="64" encoding="utf-16" name="Chinese Name" />
+        <string byte-length="64" encoding="utf-16" name="Portuguese Name" />
+        <string byte-length="256" encoding="utf-16" name="English Description" />
+        <string byte-length="256" encoding="utf-16" name="Japanese Description" />
+        <string byte-length="256" encoding="utf-16" name="German Description" />
+        <string byte-length="256" encoding="utf-16" name="French Description" />
+        <string byte-length="256" encoding="utf-16" name="Spanish Description" />
+        <string byte-length="256" encoding="utf-16" name="Italian Description" />
+        <string byte-length="256" encoding="utf-16" name="Korean Description" />
+        <string byte-length="256" encoding="utf-16" name="Chinese Description" />
+        <string byte-length="256" encoding="utf-16" name="Portuguese Description" />
+        <string byte-length="256" encoding="utf-8" name="Scenario Path" />
+        <int name="Next Map ID" />
+        <enum base="int" name="Locked">
+          <option name="Off" value="0" />
+          <option name="On" value="1" />
+        </enum>
+        <int name="Team Options" />
+        <int name="Unknown" />
+        <int name="Unknown" />
+        <unused length="4" />
+      </tagblock>
+    </tagblock>
+    <taginstance name="Location Names" />
+    <unused length="8" />
+    <tagblock name="Level Dialogs">
+      <taginstance name="Level Dialog" />
+    </tagblock>
+    <taginstance name="Location Names" />
+    <tagblock name="Unknown">
+      <stringid name="Unknown" />
+      <unused length="8" />
+      <tagblock name="Unknown">
+        <byte name="Unknown" />
+      </tagblock>
+      <unused length="4" />
+    </tagblock>
+    <unused length="8" />
+    <tagblock name="Screen Effects">
+      <unused length="16" />
+      <taginstance name="Screen Effect" />
+      <stringid name="Name" />
+      <unused length="4" />
+      <float name="Unknown" />
+    </tagblock>
+    <tagblock name="Predicted Resources">
+      <tagindex name="Resource" />
+    </tagblock>
+  </tag-definition>
+</plugin>

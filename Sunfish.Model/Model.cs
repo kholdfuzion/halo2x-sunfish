@@ -94,7 +94,7 @@ namespace Sunfish.Mode
             tag.TagStream.Position = 0;
             buffer = br.ReadBytes(Size);
             tag.TagStream.Position = 0;
-            Name = tag.StringReferenceNames[br.ReadInt32()];
+            Name = tag.Strings[br.ReadInt32()];
 
             #region Bounding Boxes
 
@@ -219,11 +219,11 @@ namespace Sunfish.Mode
             BinaryWriter bw = new BinaryWriter(stream);
             bw.Write(buffer);
             stream.Seek(0, SeekOrigin.Begin);
-            if (!tag.StringReferenceNames.Contains(Name))
+            if (!tag.Strings.Contains(Name))
             {
-                tag.StringReferenceNames.Add(Name);
+                tag.Strings.Add(Name);
             }
-            bw.Write(tag.StringReferenceNames.IndexOf(Name));
+            bw.Write(tag.Strings.IndexOf(Name));
             return stream.GetBuffer();
         }
 
@@ -443,7 +443,7 @@ namespace Sunfish.Mode
         public Region(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            name = tag.StringReferenceNames[br.ReadInt32()];
+            name = tag.Strings[br.ReadInt32()];
             nodemapoffset = br.ReadInt16();
             nodemapsize = br.ReadInt16();
 
@@ -483,11 +483,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringReferenceNames.Contains(name))
+            if (!tag.Strings.Contains(name))
             {
-                tag.StringReferenceNames.Add(name);
+                tag.Strings.Add(name);
             }
-            bw.Write(tag.StringReferenceNames.IndexOf(name));
+            bw.Write(tag.Strings.IndexOf(name));
             bw.Write(nodemapoffset);
             bw.Write(nodemapsize);
             bw.Close();
@@ -505,7 +505,7 @@ namespace Sunfish.Mode
         public Permutation(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            name = tag.StringReferenceNames[br.ReadInt32()];
+            name = tag.Strings[br.ReadInt32()];
             indices = new short[6];
             for (int i = 0; i < indices.Length; i++)
             {
@@ -535,11 +535,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringReferenceNames.Contains(name))
+            if (!tag.Strings.Contains(name))
             {
-                tag.StringReferenceNames.Add(name);
+                tag.Strings.Add(name);
             }
-            bw.Write(tag.StringReferenceNames.IndexOf(name));
+            bw.Write(tag.Strings.IndexOf(name));
             for (int i = 0; i < indices.Length; i++)
             {
                 bw.Write(indices[i]);
@@ -784,7 +784,7 @@ namespace Sunfish.Mode
         public Node(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            Name = tag.StringReferenceNames[br.ReadInt32()];
+            Name = tag.Strings[br.ReadInt32()];
             ParentNodeIndex = br.ReadInt16();
             FirstChildNodeIndex = br.ReadInt16();
             FirstSiblingNodeIndex = br.ReadInt16();
@@ -803,11 +803,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringReferenceNames.Contains(Name))
+            if (!tag.Strings.Contains(Name))
             {
-                tag.StringReferenceNames.Add(Name);
+                tag.Strings.Add(Name);
             }
-            bw.Write(tag.StringReferenceNames.IndexOf(Name));
+            bw.Write(tag.Strings.IndexOf(Name));
             bw.Write(ParentNodeIndex);
             bw.Write(FirstChildNodeIndex);
             bw.Write(FirstSiblingNodeIndex);
@@ -921,7 +921,7 @@ namespace Sunfish.Mode
         public MarkerGroup(Tag tag)
         {
             BinaryReader br = new BinaryReader(tag.TagStream);
-            Name = tag.StringReferenceNames[br.ReadInt32()];
+            Name = tag.Strings[br.ReadInt32()];
             int Count = br.ReadInt32();
             if (Count > 0)
             {
@@ -939,11 +939,11 @@ namespace Sunfish.Mode
         {
             MemoryStream stream = new MemoryStream(Size);
             BinaryWriter bw = new BinaryWriter(stream);
-            if (!tag.StringReferenceNames.Contains(Name))
+            if (!tag.Strings.Contains(Name))
             {
-                tag.StringReferenceNames.Add(Name);
+                tag.Strings.Add(Name);
             }
-            bw.Write(tag.StringReferenceNames.IndexOf(Name));
+            bw.Write(tag.Strings.IndexOf(Name));
             bw.Close();
             return stream.GetBuffer();
         }

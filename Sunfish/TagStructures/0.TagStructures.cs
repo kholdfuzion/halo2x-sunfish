@@ -210,6 +210,9 @@ namespace Sunfish.TagStructures
             return nextAddress;
         }
 
+        public long Serialize(Stream stream, int magic)
+        { return Serialize(stream, 0, this.Size, magic); }
+
         #endregion
     }
 

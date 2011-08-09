@@ -35,7 +35,7 @@ namespace Sunfish
                 filename = value;
             }
         }
-        private string filename;
+        string filename;
         /// <summary>
         /// FourCC type
         /// </summary>
@@ -55,7 +55,7 @@ namespace Sunfish
         /// <summary>
         /// Array of stringId names
         /// </summary>
-        public List<string> StringReferenceNames = new List<string>();
+        public List<string> Strings = new List<string>();
         /// <summary>
         /// Array of filenames, which are the tags this tag has references to
         /// </summary>
@@ -72,7 +72,7 @@ namespace Sunfish
             TagStream = new MemoryStream();
             ResourceStream = new MemoryStream();
             ResourceInformation = new ResourceInfo[0];
-            StringReferenceNames = new List<string>();
+            Strings = new List<string>();
             TagReferences = new List<string>();
         }
 
@@ -115,11 +115,11 @@ namespace Sunfish
                 ResourceInformation = new ResourceInfo[header.rawReferencesCount];
                 for (int i = 0; i < ResourceInformation.Length; i++)
                     ResourceInformation[i] = new ResourceInfo() { Address = binReader.ReadInt32(), Length = binReader.ReadInt32() };
-                StringReferenceNames = new List<string>(header.stringReferencesCount);
+                Strings = new List<string>(header.stringReferencesCount);
                 if (header.stringReferencesLength > 0)
                 {
                     file.Position = header.stringReferencesOffset;
-                    StringReferenceNames.AddRange(Encoding.UTF8.GetString(binReader.ReadBytes(header.stringReferencesLength)).Split('\0'));
+                    Strings.AddRange(Encoding.UTF8.GetString(binReader.ReadBytes(header.stringReferencesLength)).Split('\0'));
                 }
                 TagReferences = new List<string>(header.idReferencesCount);
                 if (header.idReferencesLength > 0)
@@ -286,18 +286,18 @@ namespace Sunfish
                 }
             }
 
-            if (StringReferenceNames.Count > 0)
+            if (Strings.Count > 0)
             {
                 binWriter.Write(Padding.GetBytes(File.Position, 512));
 
-                header.stringReferencesCount = StringReferenceNames.Count;
+                header.stringReferencesCount = Strings.Count;
                 header.stringReferencesOffset = (int)File.Position;
-                for (int i = 0; i < StringReferenceNames.Count; i++)
+                for (int i = 0; i < Strings.Count; i++)
                 {
-                    binWriter.Write(Encoding.UTF8.GetBytes(StringReferenceNames[i]));
+                    binWriter.Write(Encoding.UTF8.GetBytes(Strings[i]));
                     binWriter.Write(byte.MinValue);
                 }
-                if (StringReferenceNames.Count > 1)
+                if (Strings.Count > 1)
                     File.Position -= 1;
                 header.stringReferencesLength = (int)File.Position - header.stringReferencesOffset;
             }

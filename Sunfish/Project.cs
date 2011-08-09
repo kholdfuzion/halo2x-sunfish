@@ -16,7 +16,11 @@ namespace Sunfish
         public string BinDirectory { get { return Path.Combine(RootDirectory, "bin\\"); } }
         public string Scenario { get; set; }
         public DateTime CacheCreationDate { get; set; }
-        public List<string> SourceFiles { get { return _sourceFiles; } set { _sourceFiles = value; } }
+        public List<string> SourceFiles { get; set; }
+        public List<string> Strings { get; set; }
+        public List<string> Includes = new List<string>();
+
+        public static Project CurrentProject;
 
         public delegate void BeginImport();
         public event BeginImport OnImportBegin;
@@ -27,43 +31,37 @@ namespace Sunfish
         public void SortSourceFiles()
         {
             int scnrindex = -1, globalsindex = -1, soundindex = -1;
-            for (int i = 0; i < _sourceFiles.Count; i++)
-                if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "scnr") { scnrindex = i; }
-                else if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "matg") { globalsindex = i; }
-                else if (Sunfish.Tag.Path.GetTagType(_sourceFiles[i]) == "ugh") { soundindex = i; }
-            string matg = _sourceFiles[globalsindex];
-            string scnr = _sourceFiles[scnrindex];
-            string ugh = _sourceFiles[soundindex];
-            _sourceFiles.RemoveAt(globalsindex);
-            _sourceFiles.RemoveAt(scnrindex);
-            _sourceFiles.RemoveAt(soundindex);
-            _sourceFiles.Insert(0, matg);
-            _sourceFiles.Insert(3, scnr);
-            _sourceFiles.Add(ugh);
+            for (int i = 0; i < SourceFiles.Count; i++)
+                if (Sunfish.Tag.Path.GetTagType(SourceFiles[i]) == "scnr") { scnrindex = i; }
+                else if (Sunfish.Tag.Path.GetTagType(SourceFiles[i]) == "matg") { globalsindex = i; }
+                else if (Sunfish.Tag.Path.GetTagType(SourceFiles[i]) == "ugh") { soundindex = i; }
+            string matg = SourceFiles[globalsindex];
+            string scnr = SourceFiles[scnrindex];
+            string ugh = SourceFiles[soundindex];
+            SourceFiles.RemoveAt(globalsindex);
+            SourceFiles.RemoveAt(scnrindex);
+            SourceFiles.RemoveAt(soundindex);
+            SourceFiles.Insert(0, matg);
+            SourceFiles.Insert(3, scnr);
+            SourceFiles.Add(ugh);
         }
 
-        public List<string> Includes = new List<string>();
-
-        
-        public List<string> _sourceFiles;
-
-        public static Project Load(string filename)
+        public void Load(string filename)
         {
             Globals.Status = "Loading Project...";
             XmlReader xmlReader = XmlReader.Create(filename);
-            Project p = new Project();
             while (xmlReader.Read())
                 if (xmlReader.NodeType == XmlNodeType.Element)
                 {
                     switch (xmlReader.LocalName)
                     {
                         case "Project":
-                            p.Name = xmlReader.GetAttribute("name");
-                            p.Scenario = xmlReader.GetAttribute("scenario");
-                            p.CacheCreationDate = DateTime.FromBinary(long.Parse(xmlReader.GetAttribute("cache")));
+                            Name = xmlReader.GetAttribute("name");
+                            Scenario = xmlReader.GetAttribute("scenario");
+                            CacheCreationDate = DateTime.FromBinary(long.Parse(xmlReader.GetAttribute("cache")));
                             break;
                         case "RootDirectory":
-                            p.RootDirectory = xmlReader.GetAttribute("path");
+                            RootDirectory = xmlReader.GetAttribute("path");
                             break;
                         case "Includes":
                             XmlReader filesReader = xmlReader.ReadSubtree();
@@ -76,27 +74,28 @@ namespace Sunfish
                                     {
                                         case "include":
                                             string fName = filesReader.GetAttribute("path");
-                                            //Globals.Status = string.Format("Checking: {0}", fName);
-                                            //string t = Path.Combine(p.SourceDirectory, fName);
-                                            //if (!File.Exists(t)) throw new Exception();
-                                            p.Includes.Add(fName);
+                                            Includes.Add(fName);
                                             break;
                                     }
                                 }
-                                //Application.DoEvents();
                             }
                             break;
                     }
                 }
             xmlReader.Close();
-            //string[] oo = Directory.GetFiles(p.SourceDirectory, "*.h2tag", SearchOption.AllDirectories);
-            //for (int i = 0; i < oo.Length; i++)
-            //{
-            //    oo[i] = oo[i].Replace(p.SourceDirectory + "\\", string.Empty);
-            //}
-            //p.SourceFiles.AddRange(oo);
+            SourceFiles = new List<string>(Directory.GetFiles(SourceDirectory, String.Format("*{0}", Sunfish.Tag.Path.Extension), SearchOption.AllDirectories));
+            SortSourceFiles();
+            List<CompilerTag> Tags = new List<CompilerTag>(SourceFiles.Count);
+            Directory.SetCurrentDirectory(SourceDirectory);
+            foreach (string filepath in SourceFiles)
+                Tags.Add(new CompilerTag(filepath));
+            Strings = new List<string>(10000);
+            Strings.AddRange(Sunfish.Developmental.GlobalStringIDs.Values);
+            foreach (CompilerTag tag in Tags)
+                foreach (string str in tag.Strings)
+                    if (!Strings.Contains(str)) Strings.Add(str);
+            CurrentProject = this;
             Globals.ClearStatus();
-            return p;
         }
 
         public void Save()
@@ -143,20 +142,12 @@ namespace Sunfish
 
         public void ImportMap(Map map)
         {
-            //Benchmark mark = new Benchmark();
-            //mark.Begin();
             OnImportBegin();
             Decompiler decompiler = new Decompiler(map);
             Directory.SetCurrentDirectory(SourceDirectory);
             foreach (Index.TagInformation Entry in map.Index.TagEntries)
             {
-                //Globals.Status = "Importing \"" + map.Tagnames[Entry.Index & 0x0000FFFF] + "\"";
                 string filename = Path.ChangeExtension(map.Tagnames[Entry.Index & 0x0000FFFF], Index.GetCleanType(Entry.Type.ToString()).Trim()) + Tag.Path.Extension;
-                //if (File.Exists(Path.Combine(this.SourceDirectory, filename)))
-                //{
-                //    if (MessageBox.Show("This tag already exists.\nDo you wish to overwrite the existing tag?", "File Conflict", MessageBoxButtons.YesNo) == DialogResult.No)
-                //    { continue; }
-                //}
                 if (Entry.Type == "sbsp" || Entry.Type == "ltmp")
                     decompiler.Decompile(Entry, filename, map.PrimaryMagic);
                 else if (Entry.Type == "unic")
@@ -164,13 +155,9 @@ namespace Sunfish
                 else
                     decompiler.Decompile(Entry, filename, map.SecondaryMagic);
                 if (Entry.Type == "scnr") Scenario = filename;
-                //this.SourceFiles.Add(filename);
             }
-            //Globals.ClearStatus();
             Save();
             OnImportCompleted();
-            //mark.End();
-            //MessageBox.Show(string.Format("Finished in: {0}", mark.Result), "Project Created");
         }
 
         public void Compile()
