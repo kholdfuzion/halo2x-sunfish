@@ -71,7 +71,8 @@ namespace Sunfish.GUI
 
             #region auto load
 #if DEBUG
-            project = Project.Load(@"O:\Sunfish 2011\Projects\taco\taco.h2proj");
+            project = new Project();
+            project.Load(@"O:\Sunfish 2011\Projects\taco\taco.h2proj");
             LoadProject();
 #endif
             #endregion
@@ -144,6 +145,13 @@ namespace Sunfish.GUI
                     modeEdit.Text = Explorer.treeView1.SelectedNode.Text;
                     modeEdit.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
                     modeEdit.LoadTag(node.Path);
+                    break;
+                default:
+                    mt = new MetaTool();
+                    mt.Text = Explorer.treeView1.SelectedNode.Text;
+                    mt.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
+                    Sunfish.Tag tag = new Tag(node.Path);
+                    mt.LoadTag(tag);
                     break;
             }
         }
@@ -248,7 +256,8 @@ namespace Sunfish.GUI
             if (openProjectDialog.ShowDialog() == DialogResult.OK)
             {
                 if (project != null) { CloseProject(); }
-                project = Project.Load(openProjectDialog.FileName);
+                project = new Project();
+                project.Load(openProjectDialog.FileName);
                 LoadProject();
             }
         }
@@ -257,13 +266,11 @@ namespace Sunfish.GUI
         {
             if (project != null)
             {
-                List<string> filenames = new List<string>(Directory.GetFiles(project.SourceDirectory, String.Format("*{0}", Sunfish.Tag.Path.Extension), SearchOption.AllDirectories));
-                filenames.Sort();
                 Explorer.treeView1.Nodes.Clear();
                 Explorer.treeView1.Nodes.Add(String.Format("Solution \'{0}\'", project.Name));
                 Explorer.treeView1.Nodes[0].Tag = project.SourceDirectory;
                 Explorer.treeView1.BeginUpdate();
-                foreach (string filename in filenames)
+                foreach (string filename in project.SourceFiles)
                 {
                     string relativeFilename = filename.Substring(project.SourceDirectory.Length);
                     string[] parts = relativeFilename.Split(new char[] { Path.DirectorySeparatorChar }); 

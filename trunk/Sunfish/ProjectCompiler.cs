@@ -335,7 +335,7 @@ namespace Sunfish
                             Cache.Stream.Position = Cache.Entries[Index].Offset + valueCache.Values[i].Offset;
                             int index = br.ReadInt32();
                             Cache.Stream.Seek(-4, SeekOrigin.Current);
-                            StringId strRef = new StringId((short)StringIDsCache.Values.IndexOf(tag.StringReferenceNames[index]), (sbyte)Encoding.UTF8.GetByteCount(tag.StringReferenceNames[index]));
+                            StringId strRef = new StringId((short)StringIDsCache.Values.IndexOf(tag.Strings[index]), (sbyte)Encoding.UTF8.GetByteCount(tag.Strings[index]));
                             bw.Write(strRef);
                             break;
                             TagIndex tagIndex;
@@ -680,7 +680,7 @@ namespace Sunfish
             int count = Values.Count;
             for (int i = index; i < count; i++)
             {
-                string str = tag.StringReferenceNames[Values[i].StringId];
+                string str = tag.Strings[Values[i].StringId];
                 Values[i].StringId = new StringId((short)cache.Values.IndexOf(str), (sbyte)Encoding.UTF8.GetByteCount(str));
             }
         }
@@ -1414,7 +1414,7 @@ namespace Sunfish
 
         public override void CacheData(CompilerTag tag)
         {
-            foreach (string value in tag.StringReferenceNames)
+            foreach (string value in tag.Strings)
             {
                 if (!Values.Contains(value))
                 {

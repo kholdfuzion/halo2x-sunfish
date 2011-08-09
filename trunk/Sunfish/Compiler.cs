@@ -153,7 +153,7 @@ namespace Sunfish
                         }
                         entries.Add(new UnicodeTable.Entry()
                         {
-                            StringReference = GetStringId(t.StringReferenceNames[stringid]),
+                            StringReference = GetStringId(t.Strings[stringid]),
                             Value = Encoding.UTF8.GetString(strBytes.ToArray())
                         });
                     }
@@ -398,7 +398,7 @@ namespace Sunfish
             {
                 map.Tagnames[i] = Path.ChangeExtension(tags[i].Filename, null);
                 map.Index.TagEntries[i] = new Index.TagInformation() { Type = tags[i].Type };
-                foreach (string s in tags[i].StringReferenceNames)
+                foreach (string s in tags[i].Strings)
                 {
                     int index = stringIDNames.BinarySearch(s);
                     if (index < 0) stringIDNames.Insert(~index, s);
@@ -460,7 +460,7 @@ namespace Sunfish
                         tag.TagStream.Position = valueCache.Values[i].Offset;
                         index = binReader.ReadInt32();
                         tag.TagStream.Position -= 4;
-                        binWriter.Write(GetStringId(tag.StringReferenceNames[index]));
+                        binWriter.Write(GetStringId(tag.Strings[index]));
                         break;
                     case Value.ValueType.TagId:
                         tag.TagStream.Position = valueCache.Values[i].Offset;

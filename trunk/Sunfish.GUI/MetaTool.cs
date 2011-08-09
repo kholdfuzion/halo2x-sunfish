@@ -10,7 +10,7 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace Sunfish.GUI
 {
-    public partial class MetaTool : DockContent
+    public partial class MetaTool : SunfishEditor
     {
         public MetaTool()
         {
@@ -19,8 +19,15 @@ namespace Sunfish.GUI
 
         internal void LoadTag(Tag tag)
         {
-            this.Tag = tag;
-            metaGridView1.LoadTag(tag);
+            this.Tag = tag.Filename;
+            this.HaloTag = tag;
+            this.metaGridView1.LoadTag(tag);
+        }
+
+        public override void Save()
+        {
+            this.metaGridView1.workingTagblock.Serialize(HaloTag.TagStream, 0);
+            base.Save();
         }
     }
 }

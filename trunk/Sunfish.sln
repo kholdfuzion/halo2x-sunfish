@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sunfish.Debugger", "Sunfish
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sunfish.MetaEditor", "Sunfish.MetaEditor\Sunfish.MetaEditor.csproj", "{6FA2C7B1-11AE-4CD2-BF3C-04AD24AD3E29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginConverter", "PluginConverter\PluginConverter.csproj", "{06B52622-98B8-4E7A-AB91-75C4D08D2A94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,16 @@ Global
 		{6FA2C7B1-11AE-4CD2-BF3C-04AD24AD3E29}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{6FA2C7B1-11AE-4CD2-BF3C-04AD24AD3E29}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{6FA2C7B1-11AE-4CD2-BF3C-04AD24AD3E29}.Release|x86.ActiveCfg = Release|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{06B52622-98B8-4E7A-AB91-75C4D08D2A94}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
