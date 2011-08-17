@@ -29,6 +29,8 @@ namespace Sunfish.GUI
 
         public MainForm()
         {
+            testToolStripMenuItem_Click(null, null);
+
             if (Properties.Settings.Default.ProjectsDirectory == null)
                 Properties.Settings.Default.ProjectsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sunfish 2011\\Projects");
             if(!Directory.Exists(Properties.Settings.Default.ProjectsDirectory))
@@ -145,6 +147,12 @@ namespace Sunfish.GUI
                     modeEdit.Text = Explorer.treeView1.SelectedNode.Text;
                     modeEdit.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
                     modeEdit.LoadTag(node.Path);
+                    break;
+                case "coll":
+                    ModelEditor collEdit = new ModelEditor();
+                    collEdit.Text = Explorer.treeView1.SelectedNode.Text;
+                    collEdit.Show(this.PrimaryDock, WeifenLuo.WinFormsUI.Docking.DockState.Document);
+                    collEdit.LoadTag(node.Path);
                     break;
                 default:
                     mt = new MetaTool();
@@ -410,6 +418,12 @@ namespace Sunfish.GUI
                 foreach (string ds in d)
                     Directory.Delete(ds, true);
             } DisplaySourceFiles();
+        }
+
+        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Sunfish.Better_Tag_Structures.Coll.CollisionModel cm = new Sunfish.Better_Tag_Structures.Coll.CollisionModel();
+            //cm.Load(File.OpenRead(@"O:\Sunfish 2011\Projects\taco\source\objects\vehicles\warthog\warthog.coll.sf"), 512, -512);
         }
     }
 }

@@ -437,7 +437,8 @@ namespace Sunfish.MetaEditor
         {
             if (e.ColumnIndex == 2)
             {
-                dataGridView.BeginEdit(false);
+                dataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Selected = true;
+                dataGridView.BeginEdit(true);
             }
             if (dataGridView.Rows[e.RowIndex] is TagDialogRow) { MessageBox.Show("Choose"); }
         }

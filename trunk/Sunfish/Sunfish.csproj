@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Better_Tag_Structures\TagBlock.cs" />
     <Compile Include="Bran.cs" />
     <Compile Include="Buffering.cs" />
     <Compile Include="Decompiler.cs" />

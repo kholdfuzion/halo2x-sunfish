@@ -44,11 +44,16 @@
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.cmbNodes = new System.Windows.Forms.ComboBox();
+            this.cmbCollRegions = new System.Windows.Forms.ComboBox();
+            this.cmbEdges = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // xnaViewer1
@@ -135,11 +140,13 @@
             // 
             // toolStripButton1
             // 
+            this.toolStripButton1.CheckOnClick = true;
             this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
             this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton1.Name = "toolStripButton1";
             this.toolStripButton1.Size = new System.Drawing.Size(85, 22);
             this.toolStripButton1.Text = "Show Edges";
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripButton2
             // 
@@ -174,7 +181,7 @@
             this.groupBox3.Controls.Add(this.comboBox1);
             this.groupBox3.Location = new System.Drawing.Point(12, 329);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(168, 172);
+            this.groupBox3.Size = new System.Drawing.Size(168, 90);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Submeshes";
@@ -207,11 +214,51 @@
             this.comboBox1.TabIndex = 0;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.cmbNodes);
+            this.groupBox4.Controls.Add(this.cmbCollRegions);
+            this.groupBox4.Controls.Add(this.cmbEdges);
+            this.groupBox4.Location = new System.Drawing.Point(12, 426);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(168, 100);
+            this.groupBox4.TabIndex = 8;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "groupBox4";
+            // 
+            // cmbNodes
+            // 
+            this.cmbNodes.FormattingEnabled = true;
+            this.cmbNodes.Location = new System.Drawing.Point(6, 73);
+            this.cmbNodes.Name = "cmbNodes";
+            this.cmbNodes.Size = new System.Drawing.Size(156, 21);
+            this.cmbNodes.TabIndex = 2;
+            this.cmbNodes.SelectedIndexChanged += new System.EventHandler(this.cmbNodes_SelectedIndexChanged);
+            // 
+            // cmbCollRegions
+            // 
+            this.cmbCollRegions.FormattingEnabled = true;
+            this.cmbCollRegions.Location = new System.Drawing.Point(6, 19);
+            this.cmbCollRegions.Name = "cmbCollRegions";
+            this.cmbCollRegions.Size = new System.Drawing.Size(156, 21);
+            this.cmbCollRegions.TabIndex = 1;
+            this.cmbCollRegions.SelectedIndexChanged += new System.EventHandler(this.cmbCollRegions_SelectedIndexChanged);
+            // 
+            // cmbEdges
+            // 
+            this.cmbEdges.FormattingEnabled = true;
+            this.cmbEdges.Location = new System.Drawing.Point(6, 46);
+            this.cmbEdges.Name = "cmbEdges";
+            this.cmbEdges.Size = new System.Drawing.Size(156, 21);
+            this.cmbEdges.TabIndex = 0;
+            this.cmbEdges.SelectedIndexChanged += new System.EventHandler(this.cmbEdges_SelectedIndexChanged);
+            // 
             // ModelEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(923, 563);
+            this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.groupBox2);
@@ -233,6 +280,7 @@
             this.toolStrip1.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -255,6 +303,10 @@
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.ComboBox cmbEdges;
+        private System.Windows.Forms.ComboBox cmbCollRegions;
+        private System.Windows.Forms.ComboBox cmbNodes;
 
 
 
