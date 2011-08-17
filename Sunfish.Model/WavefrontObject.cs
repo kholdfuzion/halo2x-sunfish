@@ -413,9 +413,9 @@ namespace Sunfish.Mode
             }
         }
 
-        public CompressionInfo GenerateBoundingBox()
+        public CompressionBounds GenerateBoundingBox()
         {
-            CompressionInfo bounds = new CompressionInfo();
+            CompressionBounds bounds = new CompressionBounds();
             foreach (Vector3 v in Vertices)
             {
                 bounds.X.Expand(v.X);

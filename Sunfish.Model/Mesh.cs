@@ -41,6 +41,18 @@ namespace Sunfish.Mode
         {
             return new Microsoft.Xna.Framework.Quaternion(q.X, q.Y, q.Z, q.W);
         }
+
+        public static void Write(this BinaryWriter bw, Microsoft.Xna.Framework.Vector3 v)
+        {
+            bw.Write(v.X);
+            bw.Write(v.Y);
+            bw.Write(v.Z);
+        }
+
+        public static Microsoft.Xna.Framework.Vector3 ReadVector3(this BinaryReader br)
+        {
+            return new Microsoft.Xna.Framework.Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        }
     }
 
     public class Mesh
@@ -59,7 +71,7 @@ namespace Sunfish.Mode
          Microsoft.Xna.Framework.Graphics.Color[] Colors;
         
 
-        public Mesh(Stream stream, Resource[] resources, Section section, CompressionInfo boundingBox)
+        public Mesh(Stream stream, Resource[] resources, Section section, CompressionBounds boundingBox)
         {
             int StartOffset = (int)stream.Position;
             BinaryReader br = new BinaryReader(stream);
@@ -131,9 +143,9 @@ namespace Sunfish.Mode
 
                                     for (int i = 0; i < VertexCount; i++)
                                     {
-                                        _Vertices[i] = new Vector3(CompressionInfo.Decompress(BitConverter.ToInt16(Bytes, Index + 0), boundingBox.X),
-                                            CompressionInfo.Decompress(BitConverter.ToInt16(Bytes, Index + 2), boundingBox.Y),
-                                            CompressionInfo.Decompress(BitConverter.ToInt16(Bytes, Index + 4), boundingBox.Z));
+                                        _Vertices[i] = new Vector3(CompressionBounds.Decompress(BitConverter.ToInt16(Bytes, Index + 0), boundingBox.X),
+                                            CompressionBounds.Decompress(BitConverter.ToInt16(Bytes, Index + 2), boundingBox.Y),
+                                            CompressionBounds.Decompress(BitConverter.ToInt16(Bytes, Index + 4), boundingBox.Z));
                                         Index += VertexSize;
                                     }
                                 }
@@ -153,8 +165,8 @@ namespace Sunfish.Mode
                                     Texcoords = new Vector2[Count];
                                     for (int i = 0; i < Count; i++)
                                     {
-                                        Texcoords[i] = new Vector2(CompressionInfo.Decompress(BitConverter.ToInt16(Bytes, Index + 0),
-                                            boundingBox.U), CompressionInfo.Decompress(BitConverter.ToInt16(Bytes, Index + 2), boundingBox.V));
+                                        Texcoords[i] = new Vector2(CompressionBounds.Decompress(BitConverter.ToInt16(Bytes, Index + 0),
+                                            boundingBox.U), CompressionBounds.Decompress(BitConverter.ToInt16(Bytes, Index + 2), boundingBox.V));
                                         Index += TexcoordSize;
                                     }
                                 }
@@ -309,7 +321,7 @@ namespace Sunfish.Mode
             return normals;
         }
 
-        public byte[] Serialize(Section section, CompressionInfo boundingBox, out Resource[] resources)
+        public byte[] Serialize(Section section, CompressionBounds boundingBox, out Resource[] resources)
         {
             MemoryStream stream = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(stream);
@@ -361,9 +373,9 @@ namespace Sunfish.Mode
             resourceList.Add(new Resource(ResourceType.Vertex, ResourceSubType.VertexData, (int)(stream.Position - 120), _Vertices.Length * 6));
             foreach (Vector3 v in _Vertices)
             {
-                bw.Write(CompressionInfo.Compress(v.X, boundingBox.X));
-                bw.Write(CompressionInfo.Compress(v.Y, boundingBox.Y));
-                bw.Write(CompressionInfo.Compress(v.Z, boundingBox.Z));
+                bw.Write(CompressionBounds.Compress(v.X, boundingBox.X));
+                bw.Write(CompressionBounds.Compress(v.Y, boundingBox.Y));
+                bw.Write(CompressionBounds.Compress(v.Z, boundingBox.Z));
             }
             bw.Write(Padding.GetBytes(stream.Position, 4));
 
@@ -371,8 +383,8 @@ namespace Sunfish.Mode
             resourceList.Add(new Resource(ResourceType.Vertex, ResourceSubType.UVData, (int)(stream.Position - 120), _Vertices.Length * 4));
             foreach (Vector2 t in Texcoords)
             {
-                bw.Write(CompressionInfo.Compress(t.X, boundingBox.X));
-                bw.Write(CompressionInfo.Compress(t.Y, boundingBox.Y));
+                bw.Write(CompressionBounds.Compress(t.X, boundingBox.X));
+                bw.Write(CompressionBounds.Compress(t.Y, boundingBox.Y));
             }
             bw.Write(Padding.GetBytes(stream.Position, 4));
 
@@ -500,7 +512,7 @@ namespace Sunfish.Mode
             Wavefront.CreateWavefrontOBJFile(wfo, "O:\\test.obj");
         }
 
-        public void ImportWavefrontObject(WavefrontObject Wavefront, CompressionInfo boundingBox)
+        public void ImportWavefrontObject(WavefrontObject Wavefront, CompressionBounds boundingBox)
         {
             List<D3DVertex> temp = new List<D3DVertex>(Wavefront.FaceCount * 3);
             for (int Material = 0; Material < Wavefront.MaterialCount; Material++)
@@ -858,7 +870,7 @@ namespace Sunfish.Mode
             BoundingBox = new Microsoft.Xna.Framework.BoundingBox(new Microsoft.Xna.Framework.Vector3(f[0], f[2], f[4]), new Microsoft.Xna.Framework.Vector3(f[1], f[3], f[5]));
         }
 
-        public void Serialize(Stream stream, CompressionInfo boundingbox)
+        public void Serialize(Stream stream, CompressionBounds boundingbox)
         {
             BinaryWriter bw = new BinaryWriter(stream);
             bw.Write((short)2);

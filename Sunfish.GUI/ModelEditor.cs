@@ -18,7 +18,8 @@ namespace Sunfish.GUI
     public partial class ModelEditor : SunfishEditor
     {
         Renderer game;
-        public Sunfish.Mode.Model Model;
+        public Sunfish.Mode.RenderModel Model;
+        public Sunfish.Mode.Coll.CollisionModel CollisionModel;
 
         public int SelectedSection
         {
@@ -54,16 +55,28 @@ namespace Sunfish.GUI
         {
             this.Tag = filename;
             this.HaloTag = new Tag(filename);
-            Model = new Sunfish.Mode.Model(HaloTag);
-            Model.SelectedIndexChanged += new EventHandler(m_SelectedIndexChanged);
-            foreach (Mode.Region r in Model.Regions)
-                listBox1.Items.Add(r.name);
-            game = new Renderer(this, xnaViewer1.Height, xnaViewer1.Width);
+            if (this.HaloTag.Type == "mode")
+            {
+                Model = new Sunfish.Mode.RenderModel(HaloTag);
+                foreach (Mode.Region r in Model.Regions)
+                    listBox1.Items.Add(r.name);
+            }
+            else if (this.HaloTag.Type == "coll")
+            {
+                CollisionModel = new Sunfish.Mode.Coll.CollisionModel();
+                CollisionModel.Load(HaloTag.TagStream, 0, 0);
+            }
+            game = new Renderer(this, xnaViewer1.Height, xnaViewer1.Width); 
+            if (this.HaloTag.Type == "coll")
+            {
+                cmbCollRegions.Items.Clear();
+                foreach (Mode.Coll.Region region in CollisionModel.Regions)
+                {
+                    cmbCollRegions.Items.Add(region);
+                }
+                cmbCollRegions.SelectedIndex = 0;
+            }
             xnaViewer1.RunGame(game);
-        }
-
-        void m_SelectedIndexChanged(object sender, EventArgs e)
-        {
         }
 
         public override void Save()
@@ -89,7 +102,6 @@ namespace Sunfish.GUI
 
         private void ModelEditor_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
-            this.
             UpdateCamera(e);
         }
 
@@ -100,8 +112,11 @@ namespace Sunfish.GUI
 
         private void UpdateCamera(System.Windows.Forms.KeyEventArgs e)
         {
-            game.camera.Ctrl = e.Control;
-            game.camera.Alt = e.Alt;
+            if (game.camera != null)
+            {
+                game.camera.Ctrl = e.Control;
+                game.camera.Alt = e.Alt;
+            }
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -110,11 +125,11 @@ namespace Sunfish.GUI
             if (SelectedSection >= 0)
             {
                 comboBox1.Items.Add("All");
-                for (int i = 0; i < game.Model.Sections[SelectedSection].mesh.Groups.Length; i++)
+                for (int i = 0; i < game.RenderModel.Sections[SelectedSection].mesh.Groups.Length; i++)
                 {
                     comboBox1.Items.Add(i);
                     comboBox2.Items.Clear();
-                    comboBox2.Items.Add(game.Model.Sections[SelectedSection].mesh.Groups[i].ShaderIndex);
+                    comboBox2.Items.Add(game.RenderModel.Sections[SelectedSection].mesh.Groups[i].ShaderIndex);
                 }
                 comboBox1.SelectedIndex = 0;
                 comboBox2.SelectedIndex = 0;
@@ -199,42 +214,59 @@ namespace Sunfish.GUI
 
         private void ModelEditor_MouseClick(object sender, MouseEventArgs e)
         {
-            Ray r = Camera.GetMouseRay(new Vector2(e.X, e.Y), game.GraphicsDevice.Viewport, game.camera);
-            BoundingBox box = new BoundingBox(new Vector3(Model.Space.X.Min, Model.Space.Y.Min, Model.Space.Z.Min),
-                new Vector3(Model.Space.X.Max, Model.Space.Y.Max, Model.Space.Z.Max));
-            if (e.Button == MouseButtons.Left)
+            if (Model != null)
             {
-                if (r.Intersects(box) != null)
+                Ray r = Camera.GetMouseRay(new Vector2(e.X, e.Y), game.GraphicsDevice.Viewport, game.camera);
+                BoundingBox box = new BoundingBox(new Vector3(Model.CompressionBounds.X.Min, Model.CompressionBounds.Y.Min, Model.CompressionBounds.Z.Min),
+                    new Vector3(Model.CompressionBounds.X.Max, Model.CompressionBounds.Y.Max, Model.CompressionBounds.Z.Max));
+                if (e.Button == MouseButtons.Left)
                 {
-                    Nullable<float> last = null;
-                    int index = -1;
-                    for (int i = 0; i < game.IsRendered.Length; i++)
+                    if (r.Intersects(box) != null)
                     {
-                        if (!game.IsRendered[i]) continue;
-                        for (int g = 0; g < game.Model.Sections[i].mesh.Groups.Length; g++)
+                        Nullable<float> last = null;
+                        int index = -1;
+                        for (int i = 0; i < game.IsRendered.Length; i++)
                         {
-                            if (r.Intersects(game.Model.Sections[i].mesh.Groups[g].BoundingBox) != null)
+                            if (!game.IsRendered[i]) continue;
+                            for (int g = 0; g < game.RenderModel.Sections[i].mesh.Groups.Length; g++)
                             {
-                                for (int indice = game.Model.Sections[i].mesh.Groups[g].IndiceStart;
-                                    indice < game.Model.Sections[i].mesh.Groups[g].IndiceStart + game.Model.Sections[i].mesh.Groups[g].IndiceCount - 2;
-                                    indice++)
+                                if (r.Intersects(game.RenderModel.Sections[i].mesh.Groups[g].BoundingBox) != null)
                                 {
-                                    Triangle Temp = new Triangle(game.Model.Sections[i].mesh.Vertices[game.Model.Sections[i].mesh.Indices[indice + 0]].Position,
-                                        game.Model.Sections[i].mesh.Vertices[game.Model.Sections[i].mesh.Indices[indice + 1]].Position,
-                                        game.Model.Sections[i].mesh.Vertices[game.Model.Sections[i].mesh.Indices[indice + 2]].Position);
-                                    Nullable<float> distance = Temp.Intersects(r);
-                                    if (distance.HasValue && (distance < last || !last.HasValue))
+                                    for (int indice = game.RenderModel.Sections[i].mesh.Groups[g].IndiceStart;
+                                        indice < game.RenderModel.Sections[i].mesh.Groups[g].IndiceStart + game.RenderModel.Sections[i].mesh.Groups[g].IndiceCount - 2;
+                                        indice++)
                                     {
-                                        index = i;
-                                        last = distance; break;
+                                        Triangle Temp = new Triangle(game.RenderModel.Sections[i].mesh.Vertices[game.RenderModel.Sections[i].mesh.Indices[indice + 0]].Position,
+                                            game.RenderModel.Sections[i].mesh.Vertices[game.RenderModel.Sections[i].mesh.Indices[indice + 1]].Position,
+                                            game.RenderModel.Sections[i].mesh.Vertices[game.RenderModel.Sections[i].mesh.Indices[indice + 2]].Position);
+                                        Nullable<float> distance = Temp.Intersects(r);
+                                        if (distance.HasValue && (distance < last || !last.HasValue))
+                                        {
+                                            index = i;
+                                            last = distance; break;
+                                        }
                                     }
                                 }
                             }
                         }
+                        ChangeSelection(index);
                     }
-                    ChangeSelection(index);
+                    else ChangeSelection(-1);
                 }
-                else ChangeSelection(-1);
+            }
+            else if (CollisionModel != null)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    Ray r = Camera.GetMouseRay(new Vector2(e.X, e.Y), game.GraphicsDevice.Viewport, game.camera);
+                    game.DrawRay(r);
+                    Nullable<float> f = game.SelectedBSP.Trace(r);
+                    //game.Points.Clear();
+                    if (f != null)
+                    {
+                        game.DrawPoint(r.Position + Vector3.Multiply(r.Direction, f.Value), Color.Orange);
+                    }
+                }
             }
         }
 
@@ -295,6 +327,36 @@ namespace Sunfish.GUI
         {
             game.FillMode = toolStripButton2.Checked ? FillMode.WireFrame : FillMode.Solid;
         }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            game.EdgedFaces = toolStripButton1.Checked;
+        }
+
+        private void cmbCollRegions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cmbEdges.Items.Clear();
+            foreach (Mode.Coll.BSP bsp in (cmbCollRegions.SelectedItem as Mode.Coll.Region).Permutations[0].BSPlanes)
+            {
+                cmbEdges.Items.Add(bsp);
+            }
+            cmbEdges.SelectedIndex = 0;
+        }
+
+        private void cmbEdges_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            game.SelectedBSP = (Mode.Coll.BSP)cmbEdges.SelectedItem;
+            foreach (Mode.Coll.Node node in (cmbEdges.SelectedItem as Mode.Coll.BSP).Nodes3D)
+            {
+                cmbNodes.Items.Add(node);
+            }
+            cmbNodes.SelectedIndex = 0;
+        }
+
+        private void cmbNodes_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            game.SelectedNodeIndex = cmbNodes.SelectedIndex;
+        }
     }
 
     public class Camera
@@ -354,10 +416,8 @@ namespace Sunfish.GUI
         {
             Vector3 nearPoint = new Vector3(mousePosition, 0);
             Vector3 farPoint = new Vector3(mousePosition, 1);
-
             nearPoint = viewport.Unproject(nearPoint, camera.Projection, camera.View, Matrix.Identity);
             farPoint = viewport.Unproject(farPoint, camera.Projection, camera.View, Matrix.Identity);
-
             Vector3 direction = farPoint - nearPoint;
             direction.Normalize();
 
@@ -434,24 +494,35 @@ namespace Sunfish.GUI
     /// </summary>
     public class Renderer : Microsoft.Xna.Framework.Game
     {
+        #region Halo Model Properties
+
+        public Sunfish.Mode.RenderModel RenderModel;
         public int LevelOfDetail { get { return _levelOfDetail; } set { _levelOfDetail = value; ChangeLevelOfDetail(); } }
         int _levelOfDetail = 5;
         private void ChangeLevelOfDetail()
         {
-            if (Model != null)
+            if (RenderModel != null)
             {
-                IsRendered = new bool[Model.Sections.Length];
-                for (int i = 0; i < Model.Regions.Length; i++)
-                    IsRendered[Model.Regions[i].permutation[0].indices[LevelOfDetail]] = true;
+                IsRendered = new bool[RenderModel.Sections.Length];
+                for (int i = 0; i < RenderModel.Regions.Length; i++)
+                    IsRendered[RenderModel.Regions[i].permutation[0].indices[LevelOfDetail]] = true;
+                RenderedRegionIndices = RenderModel.GetRegionIndices(LevelOfDetail, string.Empty);
             }
         }
-
         public int SelectedSection = -1;
         public int SelectedGroup = -1;
+        public bool[] IsRendered;
+        public int[] RenderedRegionIndices;
+
+        #endregion
+
+        Sunfish.Mode.Coll.CollisionModel CollisionModel;
+
+        public Sunfish.Mode.Coll.BSP selectedBSP;
+        public Sunfish.Mode.Coll.BSP SelectedBSP { get { return selectedBSP; } set { selectedBSP = value; selectedBSP.OnDrawPoint += new Sunfish.Mode.Coll.BSP.DrawPoint(DrawPoint); } }
+        public int SelectedNodeIndex;
         SpriteFont font;
         public Camera camera;
-        public Sunfish.Mode.Model Model;
-        public bool[] IsRendered;
         BasicEffect effect;
         GraphicsDeviceManager DeviceManager;
         SpriteBatch spriteBatch;
@@ -467,12 +538,22 @@ namespace Sunfish.GUI
         {
             this.width = width;
             this.height = height;
-            this.Model = editor.Model;
-            editor.SelectedSectionChanged += new EventHandler<ModelEditor.ValueEventArgs>(editor_SelectedSectionChanged);
-            editor.SelectedGroupChanged += new EventHandler<ModelEditor.ValueEventArgs>(editor_SelectedGroupChanged);
-            LevelOfDetail = 5;
+            if (editor.Model != null)
+            {
+                this.RenderModel = editor.Model;
+                editor.SelectedSectionChanged += new EventHandler<ModelEditor.ValueEventArgs>(editor_SelectedSectionChanged);
+                editor.SelectedGroupChanged += new EventHandler<ModelEditor.ValueEventArgs>(editor_SelectedGroupChanged);
+
+                LevelOfDetail = 5;
+            } 
+            if (editor.CollisionModel != null)
+            {
+                this.CollisionModel = editor.CollisionModel;
+            }
             DeviceManager = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            StaticGame = this;
         }
 
         void editor_SelectedGroupChanged(object sender, ModelEditor.ValueEventArgs e)
@@ -510,7 +591,9 @@ namespace Sunfish.GUI
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             camera = new Camera(GraphicsDevice);
-            Vector3 mid = new Vector3((Model.Space.X.Min + Model.Space.X.Max) / 2, (Model.Space.Y.Min + Model.Space.Y.Max) / 2, (Model.Space.Z.Min + Model.Space.Z.Max) / 2);
+            Vector3 mid = Vector3.Zero;
+            if (RenderModel != null)
+                mid = new Vector3((RenderModel.CompressionBounds.X.Min + RenderModel.CompressionBounds.X.Max) / 2, (RenderModel.CompressionBounds.Y.Min + RenderModel.CompressionBounds.Y.Max) / 2, (RenderModel.CompressionBounds.Z.Min + RenderModel.CompressionBounds.Z.Max) / 2);
             camera.LookAt(new Vector3(mid.X, mid.Y, mid.Z));
             camera.Zoom = 20f;
             camera.Transformations *= Matrix.CreateFromAxisAngle(Vector3.UnitZ, (float)-(Math.PI + (Math.PI / 4)));
@@ -561,6 +644,8 @@ namespace Sunfish.GUI
             base.Update(gameTime);
         }
 
+        public static Game StaticGame { get; set; }
+
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
@@ -576,21 +661,21 @@ namespace Sunfish.GUI
             effect.LightingEnabled = true;
             effect.PreferPerPixelLighting = true;
 
-            if (Model != null)
+            #region Render RenderModel
+
+            if (RenderModel != null)
             {
                 #region Render Meshes
 
                 GraphicsDevice.RenderState.FillMode = FillMode;
 
                 effect.Begin();
-                for (int i = 0; i < Model.Sections.Length; i++)
+                foreach (int index in RenderedRegionIndices)
                 {
-                    if (!IsRendered[i]) continue;
-
-                    for (int g = 0; g < Model.Sections[i].mesh.Groups.Length; g++)
+                    for (int g = 0; g < RenderModel.Sections[index].mesh.Groups.Length; g++)
                     {
-                        if (SelectedSection == i && SelectedGroup == -1) effect.DiffuseColor = new Vector3(1, 0, 0);
-                        else if (SelectedSection == i && g == SelectedGroup) effect.DiffuseColor = new Vector3(1, 0, 0);
+                        if (SelectedSection == index && SelectedGroup == -1) effect.DiffuseColor = new Vector3(1, 0, 0);
+                        else if (SelectedSection == index && g == SelectedGroup) effect.DiffuseColor = new Vector3(1, 0, 0);
                         else effect.DiffuseColor = Color.Gray.ToVector3();
 
                         foreach (EffectPass pass in effect.CurrentTechnique.Passes)
@@ -598,8 +683,8 @@ namespace Sunfish.GUI
                             pass.Begin();
 
                             GraphicsDevice.DrawUserIndexedPrimitives<Sunfish.Mode.Vertex>(PrimitiveType.TriangleStrip,
-                                Model.Sections[i].mesh.Vertices, 0, Model.Sections[i].mesh.Vertices.Length,
-                                Model.Sections[i].mesh.Indices, Model.Sections[i].mesh.Groups[g].IndiceStart, Model.Sections[i].mesh.Groups[g].IndiceCount - 2);
+                                RenderModel.Sections[index].mesh.Vertices, 0, RenderModel.Sections[index].mesh.Vertices.Length,
+                                RenderModel.Sections[index].mesh.Indices, RenderModel.Sections[index].mesh.Groups[g].IndiceStart, RenderModel.Sections[index].mesh.Groups[g].IndiceCount - 2);
 
                             pass.End();
                         }
@@ -611,10 +696,10 @@ namespace Sunfish.GUI
                 {
                     GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
                     effect.Begin();
-                    for (int i = 0; i < Model.Sections.Length; i++)
+                    for (int i = 0; i < RenderModel.Sections.Length; i++)
                     {
                         if (!IsRendered[i]) continue;
-                        for (int g = 0; g < Model.Sections[i].mesh.Groups.Length; g++)
+                        for (int g = 0; g < RenderModel.Sections[i].mesh.Groups.Length; g++)
                         {
                             if (SelectedSection == i && SelectedGroup == -1) effect.DiffuseColor = Color.DarkRed.ToVector3();
                             else if (SelectedSection == i && g == SelectedGroup) effect.DiffuseColor = Color.DarkRed.ToVector3();
@@ -626,8 +711,8 @@ namespace Sunfish.GUI
                                 pass.Begin();
 
                                 GraphicsDevice.DrawUserIndexedPrimitives<Sunfish.Mode.Vertex>(PrimitiveType.TriangleStrip,
-                                    Model.Sections[i].mesh.Vertices, 0, Model.Sections[i].mesh.Vertices.Length,
-                                    Model.Sections[i].mesh.Indices, Model.Sections[i].mesh.Groups[g].IndiceStart, Model.Sections[i].mesh.Groups[g].IndiceCount - 2);
+                                    RenderModel.Sections[i].mesh.Vertices, 0, RenderModel.Sections[i].mesh.Vertices.Length,
+                                    RenderModel.Sections[i].mesh.Indices, RenderModel.Sections[i].mesh.Groups[g].IndiceStart, RenderModel.Sections[i].mesh.Groups[g].IndiceCount - 2);
 
                                 pass.End();
                             }
@@ -645,7 +730,7 @@ namespace Sunfish.GUI
                     foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                     {
                         pass.Begin();
-                        BoundingBoxModel bbm = new BoundingBoxModel(Model.Sections[SelectedSection].BoundingBox);
+                        BoundingBoxModel bbm = new BoundingBoxModel(RenderModel.Sections[SelectedSection].BoundingBox);
                         bbm.Draw(GraphicsDevice);
                         pass.End();
                     }
@@ -653,124 +738,124 @@ namespace Sunfish.GUI
                 }
 
                 #endregion
-
-                //if (false)
-                //{
-                //    //GraphicsDevice.RenderState.CullMode = CullMode.None;
-                //    //effect.DiffuseColor = Color.CornflowerBlue.ToVector3();
-                //    //effect.LightingEnabled = false;
-                //    //for (int i = 0; i < Model.Sections.Length; i++)
-                //    //{
-                //    //    if (!IsRendered[i]) continue;
-                //    //    Mode.Mesh mesh = Model.Sections[i].mesh;
-
-                //    //    GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
-
-                //    //    effect.Begin();
-
-                //    //    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-                //    //    {
-                //    //        pass.Begin();
-
-                //    //        GraphicsDevice.VertexDeclaration = new VertexDeclaration(DeviceManager.GraphicsDevice, Mode.Vertex.VertexElements);
-                //    //        foreach (Mode.Group g in mesh.Groups)
-                //    //        {
-                //    //            BoundingBox
-                //    //            RectangleModel rm = new RectangleModel(g.BoundingBox);
-                //    //            GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, rm.Corners, 0, rm.Corners.Length, rm.Indices, 0, rm.Indices.Length / 3);
-                //    //        }
-                //    //        pass.End();
-                //    //    }
-
-                //    //    effect.End();
-                //    //}
-                //    //GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
-                //}
-
-                //GraphicsDevice.RenderState.FillMode = FillMode.Solid;
-
-                //#endregion
-
-                //#region Render Normals
-
-                //if (false)
-                //{
-                //    for (int i = 0; i < Model.Sections.Length; i++)
-                //    {
-                //        if (!IsRendered[i]) continue;
-                //        Mode.Mesh mesh = Model.Sections[i].mesh;
-                //        effect.DiffuseColor = new Vector3(1, 0, 0);
-                //        effect.Begin();
-
-                //        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-                //        {
-                //            pass.Begin();
-
-                //            GraphicsDevice.VertexDeclaration = new VertexDeclaration(DeviceManager.GraphicsDevice, Mode.Vertex.VertexElements);
-                //            foreach (Sunfish.Mode.Vertex vert in mesh.Vertices)
-                //            {
-                //                //VertexPositionColor[] vertexList = new VertexPositionColor[] { new VertexPositionColor(vert.Position(), Color.Pink), new VertexPositionColor((vert.Position + (vert.Normal * 0.1f)), Color.Pink) };
-                //                //GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertexList, 0, 1);
-                //            }
-
-                //            pass.End();
-                //        }
-
-                //        effect.End();
-                //    }
-                //}
-
-                //#endregion
-
-                //#region Render Markers
-
-                //if (false)
-                //{
-                //    effect.LightingEnabled = false;
-                //    effect.DiffuseColor = Color.Yellow.ToVector3();
-                //    effect.Begin();
-
-                //    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-                //    {
-                //        pass.Begin();
-
-                //        GraphicsDevice.VertexDeclaration = new VertexDeclaration(DeviceManager.GraphicsDevice, Mode.Vertex.VertexElements);
-
-                //        foreach (Mode.MarkerGroup mg in Model.MarkerGroups)
-                //        {
-                //            foreach (Mode.Marker m in mg.Markers)
-                //            {
-                //                MarkerModel mm = MarkerModel.GetMarkerModel(0.01f, new Vector3(m.Translation.X, m.Translation.Y, m.Translation.Z), new Quaternion(m.Rotation.X, m.Rotation.Y, m.Rotation.Z, m.Rotation.W));
-                //                GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, mm.Vertices, 0, 9, mm.TriangleList, 0, mm.TriangleList.Length / 3);
-                //                GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.LineList, mm.Vertices, 0, 11, mm.LineList, 0, 1);
-                //            }
-                //        }
-
-                //        pass.End();
-                //    }
-
-                //    effect.End();
-                //}
-
-                //#endregion
-
-                //#region Render Nodes
-
-                //effect.LightingEnabled = true;
-                //effect.DiffuseColor = Color.White.ToVector3();
-                //effect.VertexColorEnabled = true;
-
-                //BoneModel bm = new BoneModel(Model.Nodes);
-                //foreach (NodeModel m in bm.NodeModels)
-                //    m.Draw(GraphicsDevice, effect);
-
-                //effect.LightingEnabled = true;
-                //effect.VertexColorEnabled = false;
-
-                base.Draw(gameTime);
-
-                //#endregion
             }
+
+            #endregion
+
+            #region Render CollisionModel
+
+            if (SelectedBSP != null)
+            {
+                effect.LightingEnabled = false;
+                effect.VertexColorEnabled = true;
+                GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
+                GraphicsDevice.RenderState.PointSize = 2.5f;
+
+                int RegionIndex = 3;
+                int BSPIndex = 2;
+
+                effect.Begin();
+                for (int i = 3; i < 4; i++)
+                {
+                    List<VertexPositionColor> Vertices = new List<VertexPositionColor>(SelectedBSP.Vertices.Length);
+                    List<short> LineIndices = new List<short>(SelectedBSP.Edges.Length);
+
+                    foreach (Sunfish.Mode.Coll.Vertex v in SelectedBSP.Vertices)
+                    {
+                        Vertices.Add(new VertexPositionColor(v.Position, Color.Blue));
+                    }
+                    foreach (Sunfish.Mode.Coll.Edge v in SelectedBSP.Edges)
+                    {
+                        LineIndices.Add(v.StartVertex);
+                        LineIndices.Add(v.EndVertex);
+                    }
+                    LineIndices.AddRange(new short[] { (short)(Vertices.Count - 6), (short)(Vertices.Count - 5), (short)(Vertices.Count - 4), (short)(Vertices.Count - 3), (short)(Vertices.Count - 2), (short)(Vertices.Count - 1) });
+                    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+
+                        GraphicsDevice.DrawUserPrimitives(PrimitiveType.PointList, Vertices.ToArray(), 0, Vertices.Count);
+                        GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.LineList, Vertices.ToArray(), 0, Vertices.Count, LineIndices.ToArray(), 0, LineIndices.Count / 2);
+
+                        foreach (Sunfish.Mode.Coll.Plane plane in SelectedBSP.Planes)
+                        {
+                            VertexPositionColor[] p = new VertexPositionColor[2] { new VertexPositionColor(Vector3.Zero, Color.Green), new VertexPositionColor(plane.Normal * plane.D, Color.Green) };
+                            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, p, 0, p.Length / 2);
+                        }
+
+                        pass.End();
+                    }
+                }
+                effect.End();
+
+                if (ray != null)
+                {
+                    effect.Begin();
+                    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+
+                        VertexPositionColor[] verts = new VertexPositionColor[2] { new VertexPositionColor(ray.Position, Color.Green), new VertexPositionColor(ray.Position + ray.Direction, Color.Green) };
+                        GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, verts, 0, 1);
+
+                        pass.End();
+                    }
+                    effect.End();
+                }
+
+                if (Points != null && Points.Count > 0)
+                {
+                    GraphicsDevice.RenderState.PointSize = 5f;
+                    effect.Begin();
+                    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                    {
+                        pass.Begin();
+
+                        GraphicsDevice.DrawUserPrimitives(PrimitiveType.PointList, Points.ToArray(), 0, Points.Count);
+
+                        pass.End();
+                    }
+                    effect.End();
+                }
+            }
+
+            #endregion
+
+            base.Draw(gameTime);
+        }
+
+        Ray ray;
+
+        internal void DrawRay(Ray r)
+        {
+            ray = r;
+        }
+
+        public List<VertexPositionColor> Points = new List<VertexPositionColor>();
+        internal void DrawPoint(Vector3 p)
+        {
+            Points.Add(new VertexPositionColor(p, Color.Red));
+        }
+
+        internal void DrawPoint(Vector3 p, Color c)
+        {
+            Points.Add(new VertexPositionColor(p, c));
+        }
+    }
+
+    public class PlaneModel
+    {
+        Plane Plane;
+
+        public PlaneModel(Plane plane)
+        {
+            Plane = plane;
+        }
+
+        public void Draw(GraphicsDevice device)
+        {
+
+           //short[]indices = new short[4]{ Plane.Normal * new Vector3()}
         }
     }
 
@@ -953,7 +1038,6 @@ namespace Sunfish.GUI
                     4,5,1,
                 };
         }
-
 
         public void AddChild(NodeModel child)
         {
