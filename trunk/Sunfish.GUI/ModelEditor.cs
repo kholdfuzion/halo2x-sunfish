@@ -341,6 +341,7 @@ namespace Sunfish.GUI
                 cmbEdges.Items.Add(bsp);
             }
             cmbEdges.SelectedIndex = 0;
+            game.Points.Clear();
         }
 
         private void cmbEdges_SelectedIndexChanged(object sender, EventArgs e)
@@ -356,6 +357,41 @@ namespace Sunfish.GUI
         private void cmbNodes_SelectedIndexChanged(object sender, EventArgs e)
         {
             game.SelectedNodeIndex = cmbNodes.SelectedIndex;
+        }
+
+        private void toolStripButton5_Click(object sender, EventArgs e)
+        {
+            game.Points.Clear();
+            ShitRays(new Vector3(0, 0, -1));
+        }
+
+        private void ShitRays(Vector3 direction)
+        {
+            float xMin = -1.0f;
+            float yMin = -1.0f;
+            float xMax = 1.0f;
+            float yMax = 1.0f;
+            int its = 8;
+            float xStep = xMax - xMin;
+            float yStep = yMax - yMin;
+            for (int i = 0; i < its; i++)
+            {
+                xStep *= 0.5f;
+                yStep *= 0.5f;
+            }
+            for (float x = xMin; x <= xMax - xMin; x += xStep)
+            {
+                for (float y = yMin; y <= yMax - yMin; y += yStep)
+                {
+                    Ray r = new Ray(new Vector3(x, y, 1), direction);
+                    Nullable<float> f = game.SelectedBSP.Trace(r);                    
+                    if (f != null)
+                    {
+                        game.DrawPoint(r.Position + Vector3.Multiply(r.Direction, f.Value), Color.Black);
+                    }
+                }
+            }
+           
         }
     }
 
@@ -811,7 +847,8 @@ namespace Sunfish.GUI
                     {
                         pass.Begin();
 
-                        GraphicsDevice.DrawUserPrimitives(PrimitiveType.PointList, Points.ToArray(), 0, Points.Count);
+                        VertexPositionColor[] ps = Points.ToArray();
+                        GraphicsDevice.DrawUserPrimitives(PrimitiveType.PointList, ps, 0, ps.Length);
 
                         pass.End();
                     }
